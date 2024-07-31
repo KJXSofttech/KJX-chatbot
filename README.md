@@ -1,1 +1,1 @@
-# KJX-chatbot
+# Mentor-chatbot

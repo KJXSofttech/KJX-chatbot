@@ -1,0 +1,10 @@
+torch
+numpy
+nltk
+setuptools
+Flask
+flask_session
+gunicorn
+requests
+flask_cors
+pandas
