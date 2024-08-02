@@ -5,183 +5,589 @@ from nltk_utils import tokenize, stem, bag_of_words
 
 def get_chat_response(model, all_words, tags, professors_data):
     try:
-        user_message = request.json.get("message", "")
+        user_message = request.json.get("message", "").lower()
         current_tag = request.json.get("current_tag", "start_conversation")
         response = []
         options = []
 
         if current_tag == "start_conversation":
             response = [
-                "Hello! Welcome to AskToMentor! I'm here to help you find the perfect mentor.",
-                "What kind of assistance are you looking for today?"
+                "Welcome to KJX Softtech! How can we assist you today? Here are some options to get started:",
             ]
             options = [
-                {"text": "Academic Help", "value": "academic"},
-                {"text": "Career Guidance", "value": "career"},
-                {"text": "Personal Development", "value": "personal"}
+                {"text": "Learn about our services", "value": "learn_services"},
+                {"text": "Explore the industries we serve", "value": "explore_industries"},
+                {"text": "Know why to choose us", "value": "know_why"}
+            ]
+            response_tag = "select_category"
+
+        elif user_message == "explore_another_category":
+            response = [
+                "Explore this:",
+            ]
+            options = [
+                {"text": "Learn about our services", "value": "learn_services"},
+                {"text": "Explore the industries we serve", "value": "explore_industries"}
             ]
             response_tag = "select_category"
 
         elif current_tag == "select_category":
-            if user_message.lower() == "academic":
-                response = ["Great! You've selected Academic Help. What subject are you interested in?"]
+            if user_message == "learn_services":
+                response = ["We offer a wide range of services to cater to your needs. Please choose a category to learn more:"]
                 options = [
-                    {"text": "Mathematics", "value": "mathematics"},
-                    {"text": "Science", "value": "science"},
-                    {"text": "Literature", "value": "literature"},
-                    {"text": "History", "value": "history"},
-                    {"text": "Computer Science", "value": "computer_science"},
-                    {"text": "Other", "value": "other_subject"}
+                    {"text": "Machine Learning and Data Science", "value": "ml_data_science"},
+                    {"text": "AI", "value": "ai"},
+                    {"text": "UI/UX Development", "value": "ui_ux"},
+                    {"text": "Data Visualization", "value": "data_visualization"},
+                    {"text": "IoT & Cloud Services", "value": "iot_cloud"},
+                    {"text": "DevOps", "value": "devops"},
+                    {"text": "Custom Software Development", "value": "custom_software"},
+                    {"text": "E-commerce Development", "value": "e_commerce"}
                 ]
-                response_tag = "select_academic_subject"
-            elif user_message.lower() == "career":
-                response = ["Excellent choice! For Career Guidance, what specific area are you interested in?"]
+                response_tag = "select_service_category"
+            elif user_message == "explore_industries":
+                response = ["We have experience in various industries. Please choose an industry to learn more:"]
                 options = [
-                    {"text": "Interview Preparation", "value": "interview_prep"},
-                    {"text": "Career Planning", "value": "career_planning"},
-                    {"text": "Resume Building", "value": "resume_building"},
-                    {"text": "Networking Skills", "value": "networking_skills"},
-                    {"text": "Other", "value": "other_career"}
+                    {"text": "Banking & Finance", "value": "banking_finance"},
+                    {"text": "Healthcare", "value": "healthcare"},
+                    {"text": "Government", "value": "government"},
+                    {"text": "Travel & Hospitality", "value": "travel_hospitality"},
+                    {"text": "Automotive", "value": "automotive"},
+                    {"text": "Media & Entertainment", "value": "media_entertainment"},
+                    {"text": "Real Estate", "value": "real_estate"},
+                    {"text": "Investment", "value": "investment"},
+                    {"text": "E-learning", "value": "e_learning"},
+                    {"text": "Transportation", "value": "transportation"},
+                    {"text": "E-commerce", "value": "e_commerce_industry"},
+                    {"text": "Technical Services", "value": "technical_services"}
                 ]
-                response_tag = "select_career_area"
-            elif user_message.lower() == "personal":
-                response = ["Great! For Personal Development, what area would you like to focus on?"]
+                response_tag = "select_industry_category"
+            elif user_message == "know_why":
+                response = [
+                    "Here’s why KJX Softtech stands out:",
+                    "- **Fast Service:** We are committed to completing projects as quickly and accurately as possible.",
+                    "- **Pocket-friendly:** We offer the greatest service at a reasonable price.",
+                    "- **Global Enterprise Development:** Our focus is on advancing your business on a worldwide scale.",
+                    "Would you like to explore our services, industries, or contact us for more details?"
+                ]
                 options = [
-                    {"text": "Time Management", "value": "time_management"},
-                    {"text": "Stress Management", "value": "stress_management"},
-                    {"text": "Goal Setting", "value": "goal_setting"},
-                    {"text": "Confidence Building", "value": "confidence_building"},
-                    {"text": "Communication Skills", "value": "communication_skills"},
-                    {"text": "Other", "value": "other_personal"}
+                    {"text": "Learn about our services", "value": "learn_services"},
+                    {"text": "Explore the industries we serve", "value": "explore_industries"},
+                    {"text": "Contact us", "value": "contact_us"}
                 ]
-                response_tag = "select_personal_area"
-            else:
-                response = ["I'm sorry, I didn't understand your selection. Please choose one of the options provided."]
-                options = [
-                    {"text": "Academic Help", "value": "academic"},
-                    {"text": "Career Guidance", "value": "career"},
-                    {"text": "Personal Development", "value": "personal"}
-                ]
-                response_tag = "select_category"
+                response_tag = "know_why"
 
-        elif current_tag == "select_academic_subject":
-            if user_message.lower() == "other_subject":
-                response = ["Please type the subject you need help with:"]
-                response_tag = "manual_subject_entry"
-            else:
-                matched_professors = [prof for prof in professors_data if prof['Subject'].lower() == user_message.lower()]
-                if matched_professors:
-                    response = [f"Great! Here are some mentors available for {user_message}:"]
-                    for prof in matched_professors[:2]:  # Show only 2 professors
-                        response.append(f"{prof['Name']}, {prof['Experience']} of experience, based in {prof['Geography']}")
-                    if len(matched_professors) > 2:
-                        options.append({"text": "Show more mentors", "value": "show_more_mentors"})
-                    response.append("Would you like to be matched with one of these mentors?")
-                    options.append({"text": "Yes, match me!", "value": "match_mentor"})
-                    options.append({"text": "No, I have more questions", "value": "more_questions"})
-                    response_tag = "mentor_matching"
-                else:
-                    response = [f"I'm sorry, we couldn't find any mentors for {user_message} at the moment. Would you like to try a different subject?"]
-                    options = [
-                        {"text": "Yes, show me subjects again", "value": "academic"},
-                        {"text": "No, I have more questions", "value": "more_questions"}
+        elif current_tag == "select_service_category":
+            if user_message == "ml_data_science":
+                response = [
+                    "Our Machine Learning and Data Science services include:",
+                    "- Predictive Analytics",
+                    "- Data Modeling",
+                    "- Algorithm Development",
+                    "Would you like to know more about a specific service or explore another category?"
+                ]
+                options = [
+                    {"text": "Predictive Analytics", "value": "predictive_analytics"},
+                    {"text": "Data Modeling", "value": "data_modeling"},
+                    {"text": "Algorithm Development", "value": "algorithm_development"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "ml_data_science_services"
+            elif user_message == "ai":
+                response = [
+                    "Our AI services include:",
+                    "Select specific service you want to know about:"
+                ]
+                options = [
+                    {"text": "Custom AI Solutions", "value": "custom_ai_solutions"},
+                    {"text": "Machine Learning Model Development", "value": "ml_model_development"},
+                    {"text": "AI Consulting", "value": "ai_consulting"},
+                    {"text": "Chatbot Development", "value": "chatbot_development"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "ai_services"
+            elif user_message == "ui_ux":
+                response = [
+                    "Our UI/UX Development services include:",
+                    "Select specific UI/UX service you want to know about"
+                ]
+                options = [
+                    {"text": "User Interface Design", "value": "ui_design"},
+                    {"text": "User Experience Research", "value": "ux_research"},
+                    {"text": "Prototyping and Wireframing", "value": "prototyping_wireframing"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "ui_ux_services"
+            elif user_message == "data_visualization":
+                response = [
+                    "Our Data Visualization services include:",
+                    "Would you like to know more about a specific Data Visualization service we are here to help you:"
+                ]
+                options = [
+                    {"text": "Dashboard Development", "value": "dashboard_development"},
+                    {"text": "Data Storytelling", "value": "data_storytelling"},
+                    {"text": "Visualization Consulting", "value": "visualization_consulting"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "data_visualization_services"
+            elif user_message == "iot_cloud":
+                response = [
+                    "Our IoT & Cloud Services include:",
+                ]
+                options = [
+                    {"text": "Cloud Integration", "value": "cloud_integration"},
+                    {"text": "IoT Device Management", "value": "iot_device_management"},
+                    {"text": "Cloud Security", "value": "cloud_security"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "iot_cloud_services"
+            elif user_message == "devops":
+                response = [
+                    "Our DevOps services include:",
+                    "Would you like to know more about a specific DevOps service:"
+                ]
+                options = [
+                    {"text": "CI/CD", "value": "ci_cd"},
+                    {"text": "Infrastructure as Code (IaC)", "value": "infrastructure_as_code"},
+                    {"text": "Monitoring and Logging", "value": "monitoring_logging"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "devops_services"
+            elif user_message == "custom_software":
+                response = [
+                    "Our Custom Software Development services include:",
+                    "Would you like to know more about a specific Custom Software Development"
+                ]
+                options = [
+                    {"text": "Software Consulting", "value": "software_consulting"},
+                    {"text": "Enterprise Application Development", "value": "enterprise_app_development"},
+                    {"text": "Maintenance and Support", "value": "maintenance_support"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "custom_software_services"
+            elif user_message == "e_commerce":
+                response = [
+                    "Our E-commerce Development services include:",
+                    "Would you like to know more about a specific E-commerce Development:"
+                ]
+                options = [
+                    {"text": "E-commerce Website Development", "value": "ecommerce_website_development"},
+                    {"text": "Payment Gateway Integration", "value": "payment_gateway_integration"},
+                    {"text": "E-commerce Consulting", "value": "ecommerce_consulting"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "e_commerce_services"
+
+        elif current_tag == "select_industry_category":
+            if user_message == "banking_finance":
+                response = [
+                    "In the Banking & Finance industry, we provide solutions such as:",
+                    "Would you like to know more about our work in Banking & Finance:"
+                ]
+                options = [
+                    {"text": "Financial Analytics", "value": "financial_analytics"},
+                    {"text": "Risk Management Systems", "value": "risk_management"},
+                    {"text": "Blockchain Solutions", "value": "blockchain_solutions"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "banking_finance_services"
+            elif user_message == "healthcare":
+                response = [
+                    "In the Healthcare industry, we provide solutions such as:",
                     ]
-                    response_tag = "select_category"
-
-        elif current_tag == "select_career_area" or current_tag == "select_personal_area":
-            if user_message.lower() in ["other_career", "other_personal"]:
-                response = ["Please specify the area you need help with:"]
-                response_tag = "manual_subject_entry"
-            else:
-                career_personal_professors = [prof for prof in professors_data if prof['Profession'] in [
-                    "Career Counselor", "Career Coach", "Career Planner", "Career Advisor", 
-                    "Personal Development Coach", "Life Coach"
-                ]]
-                
-                if career_personal_professors:
-                    response = [f"Great! You've selected {user_message}. Here are some mentors who can help you:"]
-                    for prof in career_personal_professors[:2]:  # Show only 2 professors
-                        response.append(f"{prof['Name']}, {prof['Profession']}, {prof['Experience']} of experience, based in {prof['Geography']}")
-                    if len(career_personal_professors) > 2:
-                        options.append({"text": "Show more mentors", "value": "show_more_mentors"})
-                    response.append("Would you like to be matched with one of these mentors?")
-                    options.append({"text": "Yes, match me!", "value": "match_mentor"})
-                    options.append({"text": "No, I have more questions", "value": "more_questions"})
-                    response_tag = "mentor_matching"
-                else:
-                    response = ["I'm sorry, we couldn't find any mentors for this area at the moment. Would you like to explore other options?"]
-                    options = [
-                        {"text": "Yes, show me other options", "value": "select_category"},
-                        {"text": "No, I have more questions", "value": "more_questions"}
-                    ]
-                    response_tag = "select_category"
-
-        elif current_tag == "manual_subject_entry":
-            matched_professors = [prof for prof in professors_data if prof['Subject'].lower() == user_message.lower()]
-            if matched_professors:
-                response = [f"Great! Here are some mentors available for {user_message}:"]
-                for prof in matched_professors[:2]:  # Show only 2 professors
-                    response.append(f"{prof['Name']}, {prof['Experience']} of experience, based in {prof['Geography']}")
-                if len(matched_professors) > 2:
-                    options.append({"text": "Show more mentors", "value": "show_more_mentors"})
-                response.append("Would you like to be matched with one of these mentors?")
-                options.append({"text": "Yes, match me!", "value": "match_mentor"})
-                options.append({"text": "No, I have more questions", "value": "more_questions"})
-                response_tag = "mentor_matching"
-            else:
-                response = [f"I'm sorry, we couldn't find any mentors for {user_message}. Would you like to try a different subject?"]
                 options = [
-                    {"text": "Yes, show me subjects again", "value": "academic"},
-                    {"text": "No, I have more questions", "value": "more_questions"}
+                    {"text": "Health Data Analytics", "value": "health_data_analytics"},
+                    {"text": "Hospital Management Systems", "value": "hospital_management"},
+                    {"text": "Telemedicine Solutions", "value": "telemedicine_solutions"},
+                    {"text": "AI-based Diagnostic Tools", "value": "ai_diagnostic_tools"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
                 ]
-                response_tag = "select_category"
-
-        elif current_tag == "mentor_matching":
-            if user_message.lower() == "match_mentor":
-                response = ["Excellent! I'll start the process to match you with a mentor.",
-                            "To help me find the best match, could you tell me your preferred mentoring style?"]
+                response_tag = "healthcare_services"
+            elif user_message == "government":
+                response = [
+                    "In the Government sector, we provide solutions such as:",
+                ]
                 options = [
-                    {"text": "Hands-on guidance", "value": "hands_on"},
-                    {"text": "General advice and direction", "value": "general_advice"},
-                    {"text": "Mix of both", "value": "mixed_style"}
+                    {"text": "E-governance Solutions", "value": "e_governance"},
+                    {"text": "Data Analytics for Policy Making", "value": "policy_data_analytics"},
+                    {"text": "Citizen Engagement Platforms", "value": "citizen_engagement"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
                 ]
-                response_tag = "mentoring_style"
-            elif user_message.lower() == "more_questions":
-                response = ["Sure, I'm here to help! I am here to help you, ask me what you want to know about our mentoring program?"]
-                response_tag = "open_questions"
-            elif user_message.lower() == "show_more_mentors":
-                # Handle showing more mentors here
-                response = ["Here are more mentors for you:"]
-                if current_tag == "select_academic_subject" or current_tag == "manual_subject_entry":
-                    matched_professors = [prof for prof in professors_data if prof['Subject'].lower() == user_message.lower()]
-                else:
-                    matched_professors = [prof for prof in professors_data if prof['Profession'] in [
-                        "Career Counselor", "Career Coach", "Career Planner", "Career Advisor", 
-                        "Personal Development Coach", "Life Coach"
-                    ]]
-                for prof in matched_professors[:4]:  # Show next 2 professors
-                    response.append(f"{prof['Name']}, {prof['Experience']} of experience, based in {prof['Geography']}")
-                if len(matched_professors) > 4:
-                    options.append({"text": "Show more mentors", "value": "show_more_mentors"})
-                response.append("Would you like to be matched with one of these mentors?")
-                options.append({"text": "Yes, match me!", "value": "match_mentor"})
-                options.append({"text": "No, I have more questions", "value": "more_questions"})
-                response_tag = "mentor_matching"
-            else:
-                response = ["I'm sorry, I didn't understand your selection. Please choose one of the options provided."]
+                response_tag = "government_services"
+            elif user_message == "travel_hospitality":
+                response = [
+                    "In the Travel & Hospitality industry, we provide solutions such as:"
+                ]
                 options = [
-                    {"text": "Yes, match me!", "value": "match_mentor"},
-                    {"text": "No, I have more questions", "value": "more_questions"}
+                    {"text": "Booking and Reservation Systems", "value": "booking_reservation"},
+                    {"text": "Customer Experience Management", "value": "customer_experience"},
+                    {"text": "Travel Data Analytics", "value": "travel_data_analytics"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
                 ]
-                response_tag = "mentor_matching"
+                response_tag = "travel_hospitality_services"
+            elif user_message == "automotive":
+                response = [
+                    "In the Automotive industry, we provide solutions such as:",
+                    "Would you like to know more about our work in Automotive:"
+                ]
+                options = [
+                    {"text": "Vehicle Telematics", "value": "vehicle_telematics"},
+                    {"text": "Predictive Maintenance", "value": "predictive_maintenance"},
+                    {"text": "Autonomous Driving Solutions", "value": "autonomous_driving"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "automotive_services"
+            elif user_message == "media_entertainment":
+                response = [
+                    "In the Media & Entertainment industry, we provide solutions such as:",
+                ]
+                options = [
+                    {"text": "Content Management Systems", "value": "content_management"},
+                    {"text": "Audience Analytics", "value": "audience_analytics"},
+                    {"text": "Digital Rights Management", "value": "digital_rights"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "media_entertainment_services"
+            elif user_message == "real_estate":
+                response = [
+                    "In the Real Estate industry, we provide solutions such as:",
+                ]
+                options = [
+                    {"text": "Property Management Systems", "value": "property_management"},
+                    {"text": "Real Estate Analytics", "value": "real_estate_analytics"},
+                    {"text": "Virtual Tours and Visualization", "value": "virtual_tours"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "real_estate_services"
+            elif user_message == "investment":
+                response = [
+                    "In the Investment sector, we provide solutions such as:",
+                ]
+                options = [
+                    {"text": "Portfolio Management Systems", "value": "portfolio_management"},
+                    {"text": "Investment Analytics", "value": "investment_analytics"},
+                    {"text": "Risk Assessment Tools", "value": "risk_assessment"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "investment_services"
+            elif user_message == "e_learning":
+                response = [
+                    "In the E-learning industry, we provide solutions such as:",
+                ]
+                options = [
+                    {"text": "Learning Management Systems", "value": "lms"},
+                    {"text": "E-learning Content Development", "value": "elearning_content"},
+                    {"text": "Virtual Classroom Solutions", "value": "virtual_classroom"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "e_learning_services"
+            elif user_message == "transportation":
+                response = [
+                    "In the Transportation industry, we provide solutions such as:",
+                ]
+                options = [
+                    {"text": "Fleet Management Systems", "value": "fleet_management"},
+                    {"text": "Transportation Analytics", "value": "transportation_analytics"},
+                    {"text": "Route Optimization", "value": "route_optimization"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "transportation_services"
+            elif user_message == "e_commerce_industry":
+                response = [
+                    "In the E-commerce industry, we provide solutions such as:",
+                ]
+                options = [
+                    {"text": "E-commerce Platform Development", "value": "ecommerce_platform"},
+                    {"text": "Online Payment Solutions", "value": "online_payment"},
+                    {"text": "Customer Analytics", "value": "customer_analytics"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "e_commerce_industry_services"
+            elif user_message == "technical_services":
+                response = [
+                    "In the Technical Services sector, we provide solutions such as:",
+                ]
+                options = [
+                    {"text": "IT Support and Maintenance", "value": "it_support"},
+                    {"text": "Technical Consulting", "value": "technical_consulting"},
+                    {"text": "System Integration", "value": "system_integration"},
+                    {"text": "Explore another category", "value": "explore_another_category"}
+                ]
+                response_tag = "technical_services"
 
-        elif current_tag == "mentoring_style":
-            response = ["Thank you for providing your preferred mentoring style. A suitable mentor will contact you shortly to discuss your needs in more detail."]
-            options = [
-                {"text": "Close Chat", "value": "close_chat"},
-                {"text": "Ask More Questions", "value": "ask_more_questions"}
+        elif current_tag == "ml_data_science_services":
+            if user_message == "predictive_analytics":
+                response = [
+                    "Predictive Analytics helps you forecast future trends based on historical data. Would you like to know more or need help with Predictive Analytics?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "predictive_analytics_service"
+            elif user_message == "data_modeling":
+                response = [
+                    "Data Modeling involves creating a visual representation of the data structure. Would you like to know more or need help with Data Modeling?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "data_modeling_service"
+            elif user_message == "algorithm_development":
+                response = [
+                    "Algorithm Development involves designing algorithms to solve specific problems. Would you like to know more or need help with Algorithm Development?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "algorithm_development_service"
+
+        elif current_tag == "ai_services":
+            if user_message == "custom_ai_solutions":
+                response = [
+                    "Custom AI Solutions are tailored to meet your specific business needs. Would you like to know more or need help with Custom AI Solutions?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "custom_ai_solutions_service"
+            elif user_message == "ml_model_development":
+                response = [
+                    "Machine Learning Model Development involves creating models that learn from data. Would you like to know more or need help with Machine Learning Model Development?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ml_model_development_service"
+            elif user_message == "ai_consulting":
+                response = [
+                    "AI Consulting helps you integrate AI into your business strategy. Would you like to know more or need help with AI Consulting?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ai_consulting_service"
+            elif user_message == "chatbot_development":
+                response = [
+                    "Chatbot Development involves creating intelligent chatbots for customer interaction. Would you like to know more or need help with Chatbot Development?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "chatbot_development_service"
+
+        elif current_tag == "ui_ux_services":
+            if user_message == "ui_design":
+                response = [
+                    "User Interface Design focuses on the look and feel of your application. Would you like to know more or need help with User Interface Design?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ui_design_service"
+            elif user_message == "ux_research":
+                response = [
+                    "User Experience Research involves understanding user behavior to improve usability. Would you like to know more or need help with User Experience Research?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ux_research_service"
+            elif user_message == "prototyping_wireframing":
+                response = [
+                    "Prototyping and Wireframing help in visualizing the application before development. Would you like to know more or need help with Prototyping and Wireframing?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "prototyping_wireframing_service"
+
+        elif current_tag == "data_visualization_services":
+            if user_message == "dashboard_development":
+                response = [
+                    "Dashboard Development involves creating interactive dashboards to visualize data. Would you like to know more or need help with Dashboard Development?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "dashboard_development_service"
+            elif user_message == "data_storytelling":
+                response = [
+                    "Data Storytelling involves presenting data in a way that tells a story. Would you like to know more or need help with Data Storytelling?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "data_storytelling_service"
+            elif user_message == "visualization_consulting":
+                response = [
+                    "Visualization Consulting helps you choose the right visualization techniques for your data. Would you like to know more or need help with Visualization Consulting?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "visualization_consulting_service"
+
+        elif current_tag == "iot_cloud_services":
+            if user_message == "cloud_integration":
+                response = [
+                    "Cloud Integration involves connecting various cloud services. Would you like to know more or need help with Cloud Integration?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "cloud_integration_service"
+            elif user_message == "iot_device_management":
+                response = [
+                    "IoT Device Management involves managing and monitoring IoT devices. Would you like to know more or need help with IoT Device Management?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "iot_device_management_service"
+            elif user_message == "cloud_security":
+                response = [
+                    "Cloud Security involves protecting data and applications in the cloud. Would you like to know more or need help with Cloud Security?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "cloud_security_service"
+
+        elif current_tag == "devops_services":
+            if user_message == "ci_cd":
+                response = [
+                    "CI/CD involves continuous integration and continuous delivery of code. Would you like to know more or need help with CI/CD?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ci_cd_service"
+            elif user_message == "infrastructure_as_code":
+                response = [
+                    "Infrastructure as Code (IaC) involves managing infrastructure through code. Would you like to know more or need help with Infrastructure as Code?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "infrastructure_as_code_service"
+            elif user_message == "monitoring_logging":
+                response = [
+                    "Monitoring and Logging involves tracking application performance and logging events. Would you like to know more or need help with Monitoring and Logging?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "monitoring_logging_service"
+
+        elif current_tag == "custom_software_services":
+            if user_message == "software_consulting":
+                response = [
+                    "Software Consulting involves advising on software solutions. Would you like to know more or need help with Software Consulting?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "software_consulting_service"
+            elif user_message == "enterprise_app_development":
+                response = [
+                    "Enterprise Application Development involves creating applications for businesses. Would you like to know more or need help with Enterprise Application Development?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "enterprise_app_development_service"
+            elif user_message == "maintenance_support":
+                response = [
+                    "Maintenance and Support involves providing ongoing support for software. Would you like to know more or need help with Maintenance and Support?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "maintenance_support_service"
+
+        elif current_tag == "e_commerce_services":
+            if user_message == "ecommerce_website_development":
+                response = [
+                    "E-commerce Website Development involves creating online stores. Would you like to know more or need help with E-commerce Website Development?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ecommerce_website_development_service"
+            elif user_message == "payment_gateway_integration":
+                response = [
+                    "Payment Gateway Integration involves connecting payment gateways to your website. Would you like to know more or need help with Payment Gateway Integration?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "payment_gateway_integration_service"
+            elif user_message == "ecommerce_consulting":
+                response = [
+                    "E-commerce Consulting involves advising on e-commerce strategies. Would you like to know more or need help with E-commerce Consulting?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ecommerce_consulting_service"
+
+        elif current_tag == "thank_you":
+            response = [
+                "Thank you so much! You can check our website for more details."
             ]
             response_tag = "end_conversation"
+            options = []
+
+        elif current_tag == "ask_problem_statement":
+            response = [
+                "Can you describe what help do you want from us?"
+            ]
+            response_tag = "get_contact_details"
+            options = []
+
+        elif current_tag == "get_contact_details":
+            problem_statement = request.json.get("message", "")
+            response = [
+                "Please provide your name, email, and phone number so we can assist you further."
+            ]
+            response_tag = "collect_contact_details"
+            options = []
+
+        elif current_tag == "collect_contact_details":
+            name = request.json.get("name", "")
+            email = request.json.get("email", "")
+            phone = request.json.get("phone", "")
+            # Handle storing the contact details and problem statement
+            response = [
+                "Thank you for providing your details. Our team will reach out to you shortly."
+            ]
+            response_tag = "end_conversation"
+            options = []
 
         else:
             # If the tag is not handled above, use the neural network to predict the response

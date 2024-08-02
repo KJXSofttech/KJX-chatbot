@@ -1,4 +1,3 @@
-
 let currentTag = "start_conversation";
 let userData = {};
 let typingTimeout;
