@@ -1,18 +1,20 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from model_utils import load_model
 from stories import get_chat_response
 import json
 import os
 
 app = Flask(__name__)
-CORS(app)  
+CORS(app)
 
+# Load model data, not needed anymore so just keeping placeholders
 try:
-    model, all_words, tags, professors_data = load_model("data.pth")
+    # Replace with actual data if needed
+    all_words = []
+    tags = []
+    professors_data = []
 except FileNotFoundError as e:
     print(f"Error loading model: {e}")
-    model = None
     all_words = []
     tags = []
     professors_data = []
@@ -23,14 +25,11 @@ def home():
 
 @app.route("/get_response", methods=["POST"])
 def chat_response():
-    if not model:
-        return jsonify({"error": "Model not loaded. Please try again later."}), 500
-
-    return get_chat_response(model, all_words, tags, professors_data)
+    return get_chat_response(all_words, tags, professors_data)
 
 @app.route("/start_conversation", methods=["POST"])
 def start_conversation():
-    return get_chat_response(model, all_words, tags, professors_data)
+    return get_chat_response(all_words, tags, professors_data)
 
 def save_user_data(data):
     try:

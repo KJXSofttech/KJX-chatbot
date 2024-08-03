@@ -61,12 +61,6 @@ function handleOptionClick(optionValue, optionText) {
 
     if (optionValue === "close_chat") {
         toggleChatbox(); // Close the chatbot
-    } else if (optionValue === "ask_more_questions") {
-        addMessage("Ask me anything!", 'bot-message');
-        currentTag = "open_questions";
-        // Show the input field
-        document.getElementById('user-input').style.display = 'inline-block';
-        document.querySelector('.send-button').style.display = 'flex';
     } else {
         // Process other user inputs
         processUserInput(optionValue, false);
@@ -141,10 +135,9 @@ function displayMessages(messages, index, options, newTag) {
             document.querySelector('.send-button').style.display = 'flex';
         }
 
-        // Handle "Close Chat" and "Ask More Questions" options
-        if (newTag === "end_conversation" && !options.some(opt => opt.value === "close_chat")) {
-            addOption("Close Chat", "close_chat");
-            addOption("Ask More Questions", "ask_more_questions");
+        // Handle "Close Chat" option and automatic close
+        if (newTag === "end_conversation") {
+            setTimeout(toggleChatbox, 5000); // Close the chatbot after 5 seconds
         }
     }
 }
