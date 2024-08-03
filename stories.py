@@ -15,6 +15,7 @@ def get_chat_response(all_words, tags, professors_data):
         current_tag = request.json.get("current_tag", "start_conversation")
         response = []
         options = []
+        response_tag = None  # Initialize response_tag to handle any unassigned cases
 
         if current_tag == "start_conversation":
             response = [
@@ -64,14 +65,55 @@ def get_chat_response(all_words, tags, professors_data):
                     "- **Fast Service:** We are committed to completing projects as quickly and accurately as possible.",
                     "- **Pocket-friendly:** We offer the greatest service at a reasonable price.",
                     "- **Global Enterprise Development:** Our focus is on advancing your business on a worldwide scale.",
-                    "Would you like to explore our services, industries, or contact us for more details?"
+                    "Would you like to contact us for more details?"
                 ]
                 options = [
-                    {"text": "Learn about our services", "value": "learn_services"},
-                    {"text": "Explore the industries we serve", "value": "explore_industries"},
                     {"text": "Contact us", "value": "contact_us"}
                 ]
-                response_tag = "know_why"
+                response_tag = "contact_us"
+
+        elif current_tag == "contact_us":
+            response = [
+                "Please provide your email."
+            ]
+            response_tag = "collect_email"
+            options = []
+
+        elif current_tag == "collect_email":
+            email = request.json.get("message", "")
+            save_user_data({"email": email})
+            response = [
+                "Please provide your phone number."
+            ]
+            response_tag = "collect_phone"
+            options = []
+
+        elif current_tag == "collect_phone":
+            phone = request.json.get("message", "")
+            save_user_data({"phone": phone})
+            response = [
+                "Please provide your name."
+            ]
+            response_tag = "collect_name"
+            options = []
+
+        elif current_tag == "collect_name":
+            name = request.json.get("message", "")
+            save_user_data({"name": name})
+            response = [
+                "Can you describe what help do you want from us? Please provide your problem statement."
+            ]
+            response_tag = "ask_problem_statement"
+            options = []
+
+        elif current_tag == "ask_problem_statement":
+            problem_statement = request.json.get("message", "")
+            save_user_data({"problem_statement": problem_statement})
+            response = [
+                "Thank you for providing your details. Our team will reach out to you shortly."
+            ]
+            response_tag = "end_conversation"
+            options = []
 
         elif current_tag == "select_service_category":
             if user_message == "ml_data_science":
@@ -181,6 +223,7 @@ def get_chat_response(all_words, tags, professors_data):
             elif user_message == "healthcare":
                 response = [
                     "In the Healthcare industry, we provide solutions such as:",
+                    "Please choose the specific solution you want to know more about:"
                 ]
                 options = [
                     {"text": "Health Data Analytics", "value": "health_data_analytics"},
@@ -192,6 +235,7 @@ def get_chat_response(all_words, tags, professors_data):
             elif user_message == "government":
                 response = [
                     "In the Government sector, we provide solutions such as:",
+                    "Please choose the specific solution you want to know more about:"
                 ]
                 options = [
                     {"text": "E-governance Solutions", "value": "e_governance"},
@@ -201,7 +245,8 @@ def get_chat_response(all_words, tags, professors_data):
                 response_tag = "government_services"
             elif user_message == "travel_hospitality":
                 response = [
-                    "In the Travel & Hospitality industry, we provide solutions such as:"
+                    "In the Travel & Hospitality industry, we provide solutions such as:",
+                    "Please choose the specific solution you want to know more about:"
                 ]
                 options = [
                     {"text": "Booking and Reservation Systems", "value": "booking_reservation"},
@@ -212,7 +257,7 @@ def get_chat_response(all_words, tags, professors_data):
             elif user_message == "automotive":
                 response = [
                     "In the Automotive industry, we provide solutions such as:",
-                    "Would you like to know more about our work in Automotive?"
+                    "Please choose the specific solution you want to know more about:"
                 ]
                 options = [
                     {"text": "Vehicle Telematics", "value": "vehicle_telematics"},
@@ -223,6 +268,7 @@ def get_chat_response(all_words, tags, professors_data):
             elif user_message == "media_entertainment":
                 response = [
                     "In the Media & Entertainment industry, we provide solutions such as:",
+                    "Please choose the specific solution you want to know more about:"
                 ]
                 options = [
                     {"text": "Content Management Systems", "value": "content_management"},
@@ -233,6 +279,7 @@ def get_chat_response(all_words, tags, professors_data):
             elif user_message == "real_estate":
                 response = [
                     "In the Real Estate industry, we provide solutions such as:",
+                    "Please choose the specific solution you want to know more about:"
                 ]
                 options = [
                     {"text": "Property Management Systems", "value": "property_management"},
@@ -243,6 +290,7 @@ def get_chat_response(all_words, tags, professors_data):
             elif user_message == "investment":
                 response = [
                     "In the Investment sector, we provide solutions such as:",
+                    "Please choose the specific solution you want to know more about:"
                 ]
                 options = [
                     {"text": "Portfolio Management Systems", "value": "portfolio_management"},
@@ -253,6 +301,7 @@ def get_chat_response(all_words, tags, professors_data):
             elif user_message == "e_learning":
                 response = [
                     "In the E-learning industry, we provide solutions such as:",
+                    "Please choose the specific solution you want to know more about:"
                 ]
                 options = [
                     {"text": "Learning Management Systems", "value": "lms"},
@@ -263,6 +312,7 @@ def get_chat_response(all_words, tags, professors_data):
             elif user_message == "transportation":
                 response = [
                     "In the Transportation industry, we provide solutions such as:",
+                    "Please choose the specific solution you want to know more about:"
                 ]
                 options = [
                     {"text": "Fleet Management Systems", "value": "fleet_management"},
@@ -273,6 +323,7 @@ def get_chat_response(all_words, tags, professors_data):
             elif user_message == "e_commerce_industry":
                 response = [
                     "In the E-commerce industry, we provide solutions such as:",
+                    "Please choose the specific solution you want to know more about:"
                 ]
                 options = [
                     {"text": "E-commerce Platform Development", "value": "ecommerce_platform"},
@@ -283,6 +334,7 @@ def get_chat_response(all_words, tags, professors_data):
             elif user_message == "technical_services":
                 response = [
                     "In the Technical Services sector, we provide solutions such as:",
+                    "Please choose the specific solution you want to know more about:"
                 ]
                 options = [
                     {"text": "IT Support and Maintenance", "value": "it_support"},
@@ -532,6 +584,180 @@ def get_chat_response(all_words, tags, professors_data):
                 ]
                 response_tag = "ask_problem_statement"
 
+        elif current_tag == "real_estate_services":
+            if user_message == "property_management":
+                response = [
+                    "Property Management Systems help you manage properties efficiently. Would you like to know more or need help with Property Management Systems?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+            elif user_message == "real_estate_analytics":
+                response = [
+                    "Real Estate Analytics provide insights into market trends and property values. Would you like to know more or need help with Real Estate Analytics?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+            elif user_message == "virtual_tours":
+                response = [
+                    "Virtual Tours and Visualization enhance property showcasing. Would you like to know more or need help with Virtual Tours and Visualization?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+
+        elif current_tag == "investment_services":
+            if user_message == "portfolio_management":
+                response = [
+                    "Portfolio Management Systems help you manage investment portfolios. Would you like to know more or need help with Portfolio Management Systems?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+            elif user_message == "investment_analytics":
+                response = [
+                    "Investment Analytics provide insights into investment performance. Would you like to know more or need help with Investment Analytics?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+            elif user_message == "risk_assessment":
+                response = [
+                    "Risk Assessment Tools help you evaluate investment risks. Would you like to know more or need help with Risk Assessment Tools?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+
+        elif current_tag == "e_learning_services":
+            if user_message == "lms":
+                response = [
+                    "Learning Management Systems help you deliver educational courses online. Would you like to know more or need help with Learning Management Systems?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+            elif user_message == "elearning_content":
+                response = [
+                    "E-learning Content Development creates engaging educational materials. Would you like to know more or need help with E-learning Content Development?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+            elif user_message == "virtual_classroom":
+                response = [
+                    "Virtual Classroom Solutions enable interactive online learning. Would you like to know more or need help with Virtual Classroom Solutions?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+
+        elif current_tag == "transportation_services":
+            if user_message == "fleet_management":
+                response = [
+                    "Fleet Management Systems help you manage vehicle fleets efficiently. Would you like to know more or need help with Fleet Management Systems?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+            elif user_message == "transportation_analytics":
+                response = [
+                    "Transportation Analytics provide insights into transportation trends. Would you like to know more or need help with Transportation Analytics?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+            elif user_message == "route_optimization":
+                response = [
+                    "Route Optimization helps you find the most efficient routes. Would you like to know more or need help with Route Optimization?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+
+        elif current_tag == "e_commerce_industry_services":
+            if user_message == "ecommerce_platform":
+                response = [
+                    "E-commerce Platform Development helps you build robust online stores. Would you like to know more or need help with E-commerce Platform Development?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+            elif user_message == "online_payment":
+                response = [
+                    "Online Payment Solutions provide secure payment processing. Would you like to know more or need help with Online Payment Solutions?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+            elif user_message == "customer_analytics":
+                response = [
+                    "Customer Analytics provide insights into customer behavior. Would you like to know more or need help with Customer Analytics?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+
+        elif current_tag == "technical_services":
+            if user_message == "it_support":
+                response = [
+                    "IT Support and Maintenance ensure your systems run smoothly. Would you like to know more or need help with IT Support and Maintenance?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+            elif user_message == "technical_consulting":
+                response = [
+                    "Technical Consulting provides expert advice on technical solutions. Would you like to know more or need help with Technical Consulting?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+            elif user_message == "system_integration":
+                response = [
+                    "System Integration connects different systems to work together. Would you like to know more or need help with System Integration?"
+                ]
+                options = [
+                    {"text": "Yes", "value": "ask_problem_statement"},
+                    {"text": "No", "value": "thank_you"}
+                ]
+                response_tag = "ask_problem_statement"
+
         elif current_tag == "thank_you":
             response = [
                 "Thank you so much! You can check our website for more details."
@@ -581,6 +807,10 @@ def get_chat_response(all_words, tags, professors_data):
             ]
             response_tag = "end_conversation"
             options = []
+
+        # Ensure response_tag is set for all pathways
+        if not response_tag:
+            response_tag = "unknown_tag"
 
         return jsonify({"response": response, "tag": response_tag, "options": options})
 
