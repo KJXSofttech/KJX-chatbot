@@ -15,7 +15,90 @@ def get_chat_response(all_words, tags, professors_data):
         current_tag = request.json.get("current_tag", "start_conversation")
         response = []
         options = []
-        response_tag = None  # Initialize response_tag to handle any unassigned cases
+        response_tag = None
+
+        categories = {
+            "ml_data_science": {
+                "name": "Machine Learning and Data Science",
+                "subcategories": {
+                    "predictive_analytics": "Predictive Analytics uses historical data to forecast future trends.",
+                    "data_modeling": "Data Modeling creates visual representations of data structures.",
+                    "algorithm_development": "Algorithm Development involves creating custom algorithms to solve specific problems."
+                }
+            },
+            "ai": {
+                "name": "AI",
+                "subcategories": {
+                    "custom_ai_solutions": "Custom AI Solutions are tailored to meet specific business needs.",
+                    "ml_model_development": "Machine Learning Model Development creates models that learn from data.",
+                    "ai_consulting": "AI Consulting helps integrate AI into your business strategy.",
+                    "chatbot_development": "Chatbot Development creates intelligent conversational interfaces."
+                }
+            },
+            "ui_ux": {
+                "name": "UI/UX Development",
+                "subcategories": {
+                    "ui_design": "User Interface Design focuses on the look and feel of your application.",
+                    "ux_research": "User Experience Research involves understanding user behavior to improve usability.",
+                    "prototyping_wireframing": "Prototyping and Wireframing help visualize the application before development."
+                }
+            },
+            "data_visualization": {
+                "name": "Data Visualization",
+                "subcategories": {
+                    "dashboard_development": "Dashboard Development creates interactive data dashboards.",
+                    "data_storytelling": "Data Storytelling presents data in a narrative format.",
+                    "visualization_consulting": "Visualization Consulting helps choose the right visualization techniques."
+                }
+            },
+            "iot_cloud": {
+                "name": "IoT & Cloud Services",
+                "subcategories": {
+                    "cloud_integration": "Cloud Integration connects various cloud services.",
+                    "iot_device_management": "IoT Device Management involves managing and monitoring IoT devices.",
+                    "cloud_security": "Cloud Security protects data and applications in the cloud."
+                }
+            },
+            "devops": {
+                "name": "DevOps",
+                "subcategories": {
+                    "ci_cd": "CI/CD (Continuous Integration/Continuous Delivery) automates software delivery processes.",
+                    "infrastructure_as_code": "Infrastructure as Code (IaC) manages infrastructure through code.",
+                    "monitoring_logging": "Monitoring and Logging tracks application performance and logs events."
+                }
+            },
+            "custom_software": {
+                "name": "Custom Software Development",
+                "subcategories": {
+                    "software_consulting": "Software Consulting provides expert advice on software solutions.",
+                    "enterprise_app_development": "Enterprise Application Development creates custom applications for businesses.",
+                    "maintenance_support": "Maintenance and Support provides ongoing software maintenance."
+                }
+            },
+            "e_commerce": {
+                "name": "E-commerce Development",
+                "subcategories": {
+                    "ecommerce_website_development": "E-commerce Website Development creates online stores.",
+                    "payment_gateway_integration": "Payment Gateway Integration connects payment systems to your website.",
+                    "ecommerce_consulting": "E-commerce Consulting provides expert advice on e-commerce strategies."
+                }
+            }
+        }
+
+        industries = {
+            "banking_finance": "Banking & Finance solutions include Financial Analytics, Risk Management Systems, and Blockchain Solutions.",
+            "healthcare": "Healthcare solutions include Health Data Analytics, Hospital Management Systems, Telemedicine Solutions, and AI-based Diagnostic Tools.",
+            "government": "Government sector solutions include E-governance Solutions, Data Analytics for Policy Making, and Citizen Engagement Platforms.",
+            "travel_hospitality": "Travel & Hospitality solutions include Booking and Reservation Systems, Customer Experience Management, and Travel Data Analytics.",
+            "automotive": "Automotive industry solutions include Vehicle Telematics, Predictive Maintenance, and Autonomous Driving Solutions.",
+            "media_entertainment": "Media & Entertainment solutions include Content Management Systems, Audience Analytics, and Digital Rights Management.",
+            "real_estate": "Real Estate solutions include Property Management Systems, Real Estate Analytics, and Virtual Tours and Visualization.",
+            "investment": "Investment sector solutions include Portfolio Management Systems, Investment Analytics, and Risk Assessment Tools.",
+            "e_learning": "E-learning solutions include Learning Management Systems, E-learning Content Development, and Virtual Classroom Solutions.",
+            "transportation": "Transportation solutions include Fleet Management Systems, Transportation Analytics, and Route Optimization.",
+            "e_commerce_industry": "E-commerce industry solutions include E-commerce Platform Development, Online Payment Solutions, and Customer Analytics.",
+            "technical_services": "Technical Services include IT Support and Maintenance, Technical Consulting, and System Integration."
+        }
 
         if current_tag == "start_conversation":
             response = [
@@ -31,782 +114,124 @@ def get_chat_response(all_words, tags, professors_data):
         elif current_tag == "select_category":
             if user_message == "learn_services":
                 response = ["We offer a wide range of services to cater to your needs. Please choose a category to learn more:"]
-                options = [
-                    {"text": "Machine Learning and Data Science", "value": "ml_data_science"},
-                    {"text": "AI", "value": "ai"},
-                    {"text": "UI/UX Development", "value": "ui_ux"},
-                    {"text": "Data Visualization", "value": "data_visualization"},
-                    {"text": "IoT & Cloud Services", "value": "iot_cloud"},
-                    {"text": "DevOps", "value": "devops"},
-                    {"text": "Custom Software Development", "value": "custom_software"},
-                    {"text": "E-commerce Development", "value": "e_commerce"}
-                ]
+                options = [{"text": cat_info["name"], "value": cat} for cat, cat_info in categories.items()]
                 response_tag = "select_service_category"
             elif user_message == "explore_industries":
                 response = ["We have experience in various industries. Please choose an industry to learn more:"]
-                options = [
-                    {"text": "Banking & Finance", "value": "banking_finance"},
-                    {"text": "Healthcare", "value": "healthcare"},
-                    {"text": "Government", "value": "government"},
-                    {"text": "Travel & Hospitality", "value": "travel_hospitality"},
-                    {"text": "Automotive", "value": "automotive"},
-                    {"text": "Media & Entertainment", "value": "media_entertainment"},
-                    {"text": "Real Estate", "value": "real_estate"},
-                    {"text": "Investment", "value": "investment"},
-                    {"text": "E-learning", "value": "e_learning"},
-                    {"text": "Transportation", "value": "transportation"},
-                    {"text": "E-commerce", "value": "e_commerce_industry"},
-                    {"text": "Technical Services", "value": "technical_services"}
-                ]
+                options = [{"text": industry.replace('_', ' ').title(), "value": industry} for industry in industries.keys()]
                 response_tag = "select_industry_category"
             elif user_message == "know_why":
                 response = [
-                    "Here’s why KJX Softtech stands out:",
+                    "Here's why KJX Softtech stands out:",
                     "- **Fast Service:** We are committed to completing projects as quickly and accurately as possible.",
                     "- **Pocket-friendly:** We offer the greatest service at a reasonable price.",
                     "- **Global Enterprise Development:** Our focus is on advancing your business on a worldwide scale.",
                     "Would you like to contact us for more details?"
                 ]
                 options = [
-                    {"text": "Contact us", "value": "contact_us"}
+                    {"text": "Yes", "value": "yes"},
+                    {"text": "No", "value": "no"}
                 ]
                 response_tag = "contact_us"
 
-        elif current_tag == "contact_us":
-            response = [
-                "Please provide your email."
-            ]
-            response_tag = "collect_email"
-            options = []
-
-        elif current_tag == "collect_email":
-            email = request.json.get("message", "")
-            save_user_data({"email": email})
-            response = [
-                "Please provide your phone number."
-            ]
-            response_tag = "collect_phone"
-            options = []
-
-        elif current_tag == "collect_phone":
-            phone = request.json.get("message", "")
-            save_user_data({"phone": phone})
-            response = [
-                "Please provide your name."
-            ]
-            response_tag = "collect_name"
-            options = []
-
-        elif current_tag == "collect_name":
-            name = request.json.get("message", "")
-            save_user_data({"name": name})
-            response = [
-                "Can you describe what help do you want from us? Please provide your problem statement."
-            ]
-            response_tag = "ask_problem_statement"
-            options = []
-
-        elif current_tag == "ask_problem_statement":
-            problem_statement = request.json.get("message", "")
-            save_user_data({"problem_statement": problem_statement})
-            response = [
-                "Thank you for providing your details. Our team will reach out to you shortly."
-            ]
-            response_tag = "end_conversation"
-            options = []
-
         elif current_tag == "select_service_category":
-            if user_message == "ml_data_science":
-                response = [
-                    "Our Machine Learning and Data Science services include:",
-                    "- Predictive Analytics",
-                    "- Data Modeling",
-                    "- Algorithm Development",
-                    "Would you like to know more about a specific service?"
-                ]
-                options = [
-                    {"text": "Predictive Analytics", "value": "predictive_analytics"},
-                    {"text": "Data Modeling", "value": "data_modeling"},
-                    {"text": "Algorithm Development", "value": "algorithm_development"}
-                ]
-                response_tag = "ml_data_science_services"
-            elif user_message == "ai":
-                response = [
-                    "Our AI services include:",
-                    "Select specific service you want to know about:"
-                ]
-                options = [
-                    {"text": "Custom AI Solutions", "value": "custom_ai_solutions"},
-                    {"text": "Machine Learning Model Development", "value": "ml_model_development"},
-                    {"text": "AI Consulting", "value": "ai_consulting"},
-                    {"text": "Chatbot Development", "value": "chatbot_development"}
-                ]
-                response_tag = "ai_services"
-            elif user_message == "ui_ux":
-                response = [
-                    "Our UI/UX Development services include:",
-                    "Select specific UI/UX service you want to know about"
-                ]
-                options = [
-                    {"text": "User Interface Design", "value": "ui_design"},
-                    {"text": "User Experience Research", "value": "ux_research"},
-                    {"text": "Prototyping and Wireframing", "value": "prototyping_wireframing"}
-                ]
-                response_tag = "ui_ux_services"
-            elif user_message == "data_visualization":
-                response = [
-                    "Our Data Visualization services include:",
-                    "Would you like to know more about a specific Data Visualization service?"
-                ]
-                options = [
-                    {"text": "Dashboard Development", "value": "dashboard_development"},
-                    {"text": "Data Storytelling", "value": "data_storytelling"},
-                    {"text": "Visualization Consulting", "value": "visualization_consulting"}
-                ]
-                response_tag = "data_visualization_services"
-            elif user_message == "iot_cloud":
-                response = [
-                    "Our IoT & Cloud Services include:",
-                ]
-                options = [
-                    {"text": "Cloud Integration", "value": "cloud_integration"},
-                    {"text": "IoT Device Management", "value": "iot_device_management"},
-                    {"text": "Cloud Security", "value": "cloud_security"}
-                ]
-                response_tag = "iot_cloud_services"
-            elif user_message == "devops":
-                response = [
-                    "Our DevOps services include:",
-                    "Would you like to know more about a specific DevOps service?"
-                ]
-                options = [
-                    {"text": "CI/CD", "value": "ci_cd"},
-                    {"text": "Infrastructure as Code (IaC)", "value": "infrastructure_as_code"},
-                    {"text": "Monitoring and Logging", "value": "monitoring_logging"}
-                ]
-                response_tag = "devops_services"
-            elif user_message == "custom_software":
-                response = [
-                    "Our Custom Software Development services include:",
-                    "Would you like to know more about a specific Custom Software Development?"
-                ]
-                options = [
-                    {"text": "Software Consulting", "value": "software_consulting"},
-                    {"text": "Enterprise Application Development", "value": "enterprise_app_development"},
-                    {"text": "Maintenance and Support", "value": "maintenance_support"}
-                ]
-                response_tag = "custom_software_services"
-            elif user_message == "e_commerce":
-                response = [
-                    "Our E-commerce Development services include:",
-                    "Would you like to know more about a specific E-commerce Development?"
-                ]
-                options = [
-                    {"text": "E-commerce Website Development", "value": "ecommerce_website_development"},
-                    {"text": "Payment Gateway Integration", "value": "payment_gateway_integration"},
-                    {"text": "E-commerce Consulting", "value": "ecommerce_consulting"}
-                ]
-                response_tag = "e_commerce_services"
+            if user_message in categories:
+                response = [f"In {categories[user_message]['name']}, we offer the following services:"]
+                options = [{"text": subcat.replace('_', ' ').title(), "value": f"{user_message}_{subcat}"} for subcat in categories[user_message]['subcategories'].keys()]
+                response_tag = "select_service_subcategory"
+            else:
+                response = ["I'm sorry, I didn't understand that. Could you please choose from the options provided?"]
+                response_tag = current_tag
+
+        elif current_tag == "select_service_subcategory":
+            for category, cat_info in categories.items():
+                for subcategory in cat_info['subcategories'].keys():
+                    if user_message.lower() == f"{category}_{subcategory}":
+                        response = [
+                            f"{subcategory.replace('_', ' ').title()}: {cat_info['subcategories'][subcategory]}",
+                            "Would you like to know more or need help with this service?"
+                        ]
+                        options = [
+                            {"text": "Yes", "value": "yes"},
+                            {"text": "No", "value": "no"}
+                        ]
+                        response_tag = f"{category}_{subcategory}_services"
+                        return jsonify({"response": response, "tag": response_tag, "options": options})
+            
+            response = ["I'm sorry, I didn't understand that. Could you please choose from the options provided?"]
+            response_tag = "select_service_category"
 
         elif current_tag == "select_industry_category":
-            if user_message == "banking_finance":
+            if user_message in industries:
                 response = [
-                    "In the Banking & Finance industry, we provide solutions such as:",
-                    "Would you like to know more about our work in Banking & Finance?"
+                    f"{user_message.replace('_', ' ').title()}: {industries[user_message]}",
+                    "Would you like to know more or need help with solutions for this industry?"
                 ]
                 options = [
-                    {"text": "Financial Analytics", "value": "financial_analytics"},
-                    {"text": "Risk Management Systems", "value": "risk_management"},
-                    {"text": "Blockchain Solutions", "value": "blockchain_solutions"}
+                    {"text": "Yes", "value": "yes"},
+                    {"text": "No", "value": "no"}
                 ]
-                response_tag = "banking_finance_services"
-            elif user_message == "healthcare":
-                response = [
-                    "In the Healthcare industry, we provide solutions such as:",
-                    "Please choose the specific solution you want to know more about:"
-                ]
-                options = [
-                    {"text": "Health Data Analytics", "value": "health_data_analytics"},
-                    {"text": "Hospital Management Systems", "value": "hospital_management"},
-                    {"text": "Telemedicine Solutions", "value": "telemedicine_solutions"},
-                    {"text": "AI-based Diagnostic Tools", "value": "ai_diagnostic_tools"}
-                ]
-                response_tag = "healthcare_services"
-            elif user_message == "government":
-                response = [
-                    "In the Government sector, we provide solutions such as:",
-                    "Please choose the specific solution you want to know more about:"
-                ]
-                options = [
-                    {"text": "E-governance Solutions", "value": "e_governance"},
-                    {"text": "Data Analytics for Policy Making", "value": "policy_data_analytics"},
-                    {"text": "Citizen Engagement Platforms", "value": "citizen_engagement"}
-                ]
-                response_tag = "government_services"
-            elif user_message == "travel_hospitality":
-                response = [
-                    "In the Travel & Hospitality industry, we provide solutions such as:",
-                    "Please choose the specific solution you want to know more about:"
-                ]
-                options = [
-                    {"text": "Booking and Reservation Systems", "value": "booking_reservation"},
-                    {"text": "Customer Experience Management", "value": "customer_experience"},
-                    {"text": "Travel Data Analytics", "value": "travel_data_analytics"}
-                ]
-                response_tag = "travel_hospitality_services"
-            elif user_message == "automotive":
-                response = [
-                    "In the Automotive industry, we provide solutions such as:",
-                    "Please choose the specific solution you want to know more about:"
-                ]
-                options = [
-                    {"text": "Vehicle Telematics", "value": "vehicle_telematics"},
-                    {"text": "Predictive Maintenance", "value": "predictive_maintenance"},
-                    {"text": "Autonomous Driving Solutions", "value": "autonomous_driving"}
-                ]
-                response_tag = "automotive_services"
-            elif user_message == "media_entertainment":
-                response = [
-                    "In the Media & Entertainment industry, we provide solutions such as:",
-                    "Please choose the specific solution you want to know more about:"
-                ]
-                options = [
-                    {"text": "Content Management Systems", "value": "content_management"},
-                    {"text": "Audience Analytics", "value": "audience_analytics"},
-                    {"text": "Digital Rights Management", "value": "digital_rights"}
-                ]
-                response_tag = "media_entertainment_services"
-            elif user_message == "real_estate":
-                response = [
-                    "In the Real Estate industry, we provide solutions such as:",
-                    "Please choose the specific solution you want to know more about:"
-                ]
-                options = [
-                    {"text": "Property Management Systems", "value": "property_management"},
-                    {"text": "Real Estate Analytics", "value": "real_estate_analytics"},
-                    {"text": "Virtual Tours and Visualization", "value": "virtual_tours"}
-                ]
-                response_tag = "real_estate_services"
-            elif user_message == "investment":
-                response = [
-                    "In the Investment sector, we provide solutions such as:",
-                    "Please choose the specific solution you want to know more about:"
-                ]
-                options = [
-                    {"text": "Portfolio Management Systems", "value": "portfolio_management"},
-                    {"text": "Investment Analytics", "value": "investment_analytics"},
-                    {"text": "Risk Assessment Tools", "value": "risk_assessment"}
-                ]
-                response_tag = "investment_services"
-            elif user_message == "e_learning":
-                response = [
-                    "In the E-learning industry, we provide solutions such as:",
-                    "Please choose the specific solution you want to know more about:"
-                ]
-                options = [
-                    {"text": "Learning Management Systems", "value": "lms"},
-                    {"text": "E-learning Content Development", "value": "elearning_content"},
-                    {"text": "Virtual Classroom Solutions", "value": "virtual_classroom"}
-                ]
-                response_tag = "e_learning_services"
-            elif user_message == "transportation":
-                response = [
-                    "In the Transportation industry, we provide solutions such as:",
-                    "Please choose the specific solution you want to know more about:"
-                ]
-                options = [
-                    {"text": "Fleet Management Systems", "value": "fleet_management"},
-                    {"text": "Transportation Analytics", "value": "transportation_analytics"},
-                    {"text": "Route Optimization", "value": "route_optimization"}
-                ]
-                response_tag = "transportation_services"
-            elif user_message == "e_commerce_industry":
-                response = [
-                    "In the E-commerce industry, we provide solutions such as:",
-                    "Please choose the specific solution you want to know more about:"
-                ]
-                options = [
-                    {"text": "E-commerce Platform Development", "value": "ecommerce_platform"},
-                    {"text": "Online Payment Solutions", "value": "online_payment"},
-                    {"text": "Customer Analytics", "value": "customer_analytics"}
-                ]
-                response_tag = "e_commerce_industry_services"
-            elif user_message == "technical_services":
-                response = [
-                    "In the Technical Services sector, we provide solutions such as:",
-                    "Please choose the specific solution you want to know more about:"
-                ]
-                options = [
-                    {"text": "IT Support and Maintenance", "value": "it_support"},
-                    {"text": "Technical Consulting", "value": "technical_consulting"},
-                    {"text": "System Integration", "value": "system_integration"}
-                ]
-                response_tag = "technical_services"
+                response_tag = f"{user_message}_industry"
+            else:
+                response = ["I'm sorry, I didn't understand that. Could you please choose from the options provided?"]
+                response_tag = current_tag
 
-        elif current_tag == "ml_data_science_services":
-            if user_message == "predictive_analytics":
-                response = [
-                    "Predictive Analytics helps you forecast future trends based on historical data. Would you like to know more or need help with Predictive Analytics?"
-                ]
+        elif current_tag.endswith("_services") or current_tag.endswith("_industry") or current_tag == "contact_us":
+            if user_message == "yes":
+                response = ["Great! Please provide your email."]
+                response_tag = "collect_email"
+                options = []
+            elif user_message == "no":
+                response = ["Thank you for your interest. Is there anything else I can help you with?"]
                 options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
+                    {"text": "Yes", "value": "start_conversation"},
+                    {"text": "No", "value": "end_conversation"}
                 ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "data_modeling":
-                response = [
-                    "Data Modeling involves creating a visual representation of the data structure. Would you like to know more or need help with Data Modeling?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "algorithm_development":
-                response = [
-                    "Algorithm Development involves designing algorithms to solve specific problems. Would you like to know more or need help with Algorithm Development?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "ai_services":
-            if user_message == "custom_ai_solutions":
-                response = [
-                    "Custom AI Solutions are tailored to meet your specific business needs. Would you like to know more or need help with Custom AI Solutions?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "ml_model_development":
-                response = [
-                    "Machine Learning Model Development involves creating models that learn from data. Would you like to know more or need help with Machine Learning Model Development?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "ai_consulting":
-                response = [
-                    "AI Consulting helps you integrate AI into your business strategy. Would you like to know more or need help with AI Consulting?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "chatbot_development":
-                response = [
-                    "Chatbot Development involves creating intelligent chatbots for customer interaction. Would you like to know more or need help with Chatbot Development?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "ui_ux_services":
-            if user_message == "ui_design":
-                response = [
-                    "User Interface Design focuses on the look and feel of your application. Would you like to know more or need help with User Interface Design?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "ux_research":
-                response = [
-                    "User Experience Research involves understanding user behavior to improve usability. Would you like to know more or need help with User Experience Research?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "prototyping_wireframing":
-                response = [
-                    "Prototyping and Wireframing help in visualizing the application before development. Would you like to know more or need help with Prototyping and Wireframing?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "data_visualization_services":
-            if user_message == "dashboard_development":
-                response = [
-                    "Dashboard Development involves creating interactive dashboards to visualize data. Would you like to know more or need help with Dashboard Development?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "data_storytelling":
-                response = [
-                    "Data Storytelling involves presenting data in a way that tells a story. Would you like to know more or need help with Data Storytelling?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "visualization_consulting":
-                response = [
-                    "Visualization Consulting helps you choose the right visualization techniques for your data. Would you like to know more or need help with Visualization Consulting?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "iot_cloud_services":
-            if user_message == "cloud_integration":
-                response = [
-                    "Cloud Integration involves connecting various cloud services. Would you like to know more or need help with Cloud Integration?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "iot_device_management":
-                response = [
-                    "IoT Device Management involves managing and monitoring IoT devices. Would you like to know more or need help with IoT Device Management?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "cloud_security":
-                response = [
-                    "Cloud Security involves protecting data and applications in the cloud. Would you like to know more or need help with Cloud Security?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "devops_services":
-            if user_message == "ci_cd":
-                response = [
-                    "CI/CD involves continuous integration and continuous delivery of code. Would you like to know more or need help with CI/CD?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "infrastructure_as_code":
-                response = [
-                    "Infrastructure as Code (IaC) involves managing infrastructure through code. Would you like to know more or need help with Infrastructure as Code?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "monitoring_logging":
-                response = [
-                    "Monitoring and Logging involves tracking application performance and logging events. Would you like to know more or need help with Monitoring and Logging?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "custom_software_services":
-            if user_message == "software_consulting":
-                response = [
-                    "Software Consulting involves advising on software solutions. Would you like to know more or need help with Software Consulting?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "enterprise_app_development":
-                response = [
-                    "Enterprise Application Development involves creating applications for businesses. Would you like to know more or need help with Enterprise Application Development?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "maintenance_support":
-                response = [
-                    "Maintenance and Support involves providing ongoing support for software. Would you like to know more or need help with Maintenance and Support?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "e_commerce_services":
-            if user_message == "ecommerce_website_development":
-                response = [
-                    "E-commerce Website Development involves creating online stores. Would you like to know more or need help with E-commerce Website Development?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "payment_gateway_integration":
-                response = [
-                    "Payment Gateway Integration involves connecting payment gateways to your website. Would you like to know more or need help with Payment Gateway Integration?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "ecommerce_consulting":
-                response = [
-                    "E-commerce Consulting involves advising on e-commerce strategies. Would you like to know more or need help with E-commerce Consulting?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "real_estate_services":
-            if user_message == "property_management":
-                response = [
-                    "Property Management Systems help you manage properties efficiently. Would you like to know more or need help with Property Management Systems?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "real_estate_analytics":
-                response = [
-                    "Real Estate Analytics provide insights into market trends and property values. Would you like to know more or need help with Real Estate Analytics?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "virtual_tours":
-                response = [
-                    "Virtual Tours and Visualization enhance property showcasing. Would you like to know more or need help with Virtual Tours and Visualization?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "investment_services":
-            if user_message == "portfolio_management":
-                response = [
-                    "Portfolio Management Systems help you manage investment portfolios. Would you like to know more or need help with Portfolio Management Systems?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "investment_analytics":
-                response = [
-                    "Investment Analytics provide insights into investment performance. Would you like to know more or need help with Investment Analytics?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "risk_assessment":
-                response = [
-                    "Risk Assessment Tools help you evaluate investment risks. Would you like to know more or need help with Risk Assessment Tools?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "e_learning_services":
-            if user_message == "lms":
-                response = [
-                    "Learning Management Systems help you deliver educational courses online. Would you like to know more or need help with Learning Management Systems?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "elearning_content":
-                response = [
-                    "E-learning Content Development creates engaging educational materials. Would you like to know more or need help with E-learning Content Development?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "virtual_classroom":
-                response = [
-                    "Virtual Classroom Solutions enable interactive online learning. Would you like to know more or need help with Virtual Classroom Solutions?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "transportation_services":
-            if user_message == "fleet_management":
-                response = [
-                    "Fleet Management Systems help you manage vehicle fleets efficiently. Would you like to know more or need help with Fleet Management Systems?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "transportation_analytics":
-                response = [
-                    "Transportation Analytics provide insights into transportation trends. Would you like to know more or need help with Transportation Analytics?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "route_optimization":
-                response = [
-                    "Route Optimization helps you find the most efficient routes. Would you like to know more or need help with Route Optimization?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "e_commerce_industry_services":
-            if user_message == "ecommerce_platform":
-                response = [
-                    "E-commerce Platform Development helps you build robust online stores. Would you like to know more or need help with E-commerce Platform Development?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "online_payment":
-                response = [
-                    "Online Payment Solutions provide secure payment processing. Would you like to know more or need help with Online Payment Solutions?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "customer_analytics":
-                response = [
-                    "Customer Analytics provide insights into customer behavior. Would you like to know more or need help with Customer Analytics?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "technical_services":
-            if user_message == "it_support":
-                response = [
-                    "IT Support and Maintenance ensure your systems run smoothly. Would you like to know more or need help with IT Support and Maintenance?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "technical_consulting":
-                response = [
-                    "Technical Consulting provides expert advice on technical solutions. Would you like to know more or need help with Technical Consulting?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-            elif user_message == "system_integration":
-                response = [
-                    "System Integration connects different systems to work together. Would you like to know more or need help with System Integration?"
-                ]
-                options = [
-                    {"text": "Yes", "value": "ask_problem_statement"},
-                    {"text": "No", "value": "thank_you"}
-                ]
-                response_tag = "ask_problem_statement"
-
-        elif current_tag == "thank_you":
-            response = [
-                "Thank you so much! You can check our website for more details."
-            ]
-            response_tag = "end_conversation"
-            options = []
-
-        elif current_tag == "ask_problem_statement":
-            response = [
-                "Can you describe what help do you want from us? Please provide your problem statement."
-            ]
-            response_tag = "get_contact_details"
-            options = []
-
-        elif current_tag == "get_contact_details":
-            problem_statement = request.json.get("message", "")
-            response = [
-                "Please provide your name."
-            ]
-            response_tag = "collect_name"
-            options = []
-            save_user_data({"problem_statement": problem_statement})
-
-        elif current_tag == "collect_name":
-            name = request.json.get("message", "")
-            response = [
-                "Please provide your email."
-            ]
-            response_tag = "collect_email"
-            options = []
-            save_user_data({"name": name})
+                response_tag = "offer_more_help"
 
         elif current_tag == "collect_email":
             email = request.json.get("message", "")
-            response = [
-                "Please provide your phone number."
-            ]
+            save_user_data({"email": email})
+            response = ["Thank you. Now, please provide your phone number."]
             response_tag = "collect_phone"
             options = []
-            save_user_data({"email": email})
 
         elif current_tag == "collect_phone":
             phone = request.json.get("message", "")
             save_user_data({"phone": phone})
-            response = [
-                "Thank you for providing your details. Our team will reach out to you shortly."
-            ]
+            response = ["Great. Could you please tell me your name?"]
+            response_tag = "collect_name"
+            options = []
+
+        elif current_tag == "collect_name":
+            name = request.json.get("message", "")
+            save_user_data({"name": name})
+            response = ["Thank you, " + name + ". Can you describe what help you want from us? Please provide your problem statement."]
+            response_tag = "collect_problem_statement"
+            options = []
+
+        elif current_tag == "collect_problem_statement":
+            problem_statement = request.json.get("message", "")
+            save_user_data({"problem_statement": problem_statement})
+            response = ["Thank you for providing your details. Our team will reach out to you shortly."]
             response_tag = "end_conversation"
             options = []
+
+        elif current_tag == "offer_more_help":
+            if user_message == "yes":
+                return get_chat_response(all_words, tags, professors_data)  # Start over
+            elif user_message == "no":
+                response = ["Thank you for chatting with us. Have a great day!"]
+                response_tag = "end_conversation"
+                options = []
+
+        elif current_tag == "end_conversation":
+            response = ["Is there anything else I can help you with?"]
+            options = [
+                {"text": "Yes", "value": "start_conversation"},
+                {"text": "No", "value": "close_chat"}
+            ]
+            response_tag = "offer_more_help"
 
         # Ensure response_tag is set for all pathways
         if not response_tag:
@@ -816,3 +241,5 @@ def get_chat_response(all_words, tags, professors_data):
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {e}"}), 500
+
+# The rest of your code (if any) goes here
