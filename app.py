@@ -25,11 +25,11 @@ def home():
 
 @app.route("/get_response", methods=["POST"])
 def chat_response():
-    return get_chat_response(all_words, tags, professors_data)
+    return get_chat_response()
 
 @app.route("/start_conversation", methods=["POST"])
 def start_conversation():
-    return get_chat_response(all_words, tags, professors_data)
+    return get_chat_response()
 
 def save_user_data(data):
     try:

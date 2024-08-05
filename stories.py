@@ -1,15 +1,49 @@
 import json
+import re
 from flask import jsonify, request
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-def save_user_data(data):
+def is_valid_email(email):
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(email_regex, email) is not None
+
+def is_valid_phone(phone):
+    phone_regex = r'^\+?1?\d{9,15}$'
+    return re.match(phone_regex, phone) is not None
+
+def send_email(data):
+    sender_email = "devamkathane.me@sbjit.edu.in"
+    password = "nooneisyours42"
+    receiver_email = sender_email  # Sending to self
+
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = receiver_email
+    message["Subject"] = "New User Data from Chatbot"
+
+    body = f"""
+    New user data received:
+    
+    Name: {data.get('name', 'N/A')}
+    Email: {data.get('email', 'N/A')}
+    Phone: {data.get('phone', 'N/A')}
+    Problem Statement: {data.get('problem_statement', 'N/A')}
+    """
+
+    message.attach(MIMEText(body, "plain"))
+
     try:
-        with open('user_data.json', 'a') as f:
-            json.dump(data, f)
-            f.write("\n")
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(sender_email, password)
+            server.send_message(message)
+        print("Email sent successfully")
     except Exception as e:
-        print(f"Error saving user data: {e}")
+        print(f"Error sending email: {e}")
 
-def get_chat_response(all_words, tags, professors_data):
+def get_chat_response():
     try:
         user_message = request.json.get("message", "").lower()
         current_tag = request.json.get("current_tag", "start_conversation")
@@ -191,39 +225,39 @@ def get_chat_response(all_words, tags, professors_data):
 
         elif current_tag == "collect_email":
             email = request.json.get("message", "")
-            save_user_data({"email": email})
-            response = ["Thank you. Now, please provide your phone number."]
-            response_tag = "collect_phone"
+            if is_valid_email(email):
+                send_email({"email": email})
+                response = ["Thank you. Now, please provide your phone number."]
+                response_tag = "collect_phone"
+            else:
+                response = ["The email address you provided is not valid. Please enter a valid email address."]
+                response_tag = "collect_email"
             options = []
 
         elif current_tag == "collect_phone":
             phone = request.json.get("message", "")
-            save_user_data({"phone": phone})
-            response = ["Great. Could you please tell me your name?"]
-            response_tag = "collect_name"
+            if is_valid_phone(phone):
+                send_email({"phone": phone})
+                response = ["Great. Could you please tell me your name?"]
+                response_tag = "collect_name"
+            else:
+                response = ["The phone number you provided is not valid. Please enter a valid phone number."]
+                response_tag = "collect_phone"
             options = []
 
         elif current_tag == "collect_name":
             name = request.json.get("message", "")
-            save_user_data({"name": name})
+            send_email({"name": name})
             response = ["Thank you, " + name + ". Can you describe what help you want from us? Please provide your problem statement."]
             response_tag = "collect_problem_statement"
             options = []
 
         elif current_tag == "collect_problem_statement":
             problem_statement = request.json.get("message", "")
-            save_user_data({"problem_statement": problem_statement})
+            send_email({"problem_statement": problem_statement})
             response = ["Thank you for providing your details. Our team will reach out to you shortly."]
             response_tag = "end_conversation"
             options = []
-
-        elif current_tag == "offer_more_help":
-            if user_message == "yes":
-                return get_chat_response(all_words, tags, professors_data)  # Start over
-            elif user_message == "no":
-                response = ["Thank you for chatting with us. Have a great day!"]
-                response_tag = "end_conversation"
-                options = []
 
         elif current_tag == "end_conversation":
             response = ["Is there anything else I can help you with?"]
