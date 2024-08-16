@@ -1,9 +1,26 @@
 import json
 import re
 from flask import jsonify, request
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from pymongo import MongoClient
+import urllib.parse
+
+# MongoDB connection setup
+username = urllib.parse.quote_plus("kjxsofttechpvtltd")
+password = urllib.parse.quote_plus("KJXSOFTTECH123")
+connection_string = f"mongodb+srv://{username}:{password}@kjxwebsite.3mup0.mongodb.net/?retryWrites=true&w=majority&appName=kjxwebsite"
+
+client = MongoClient(connection_string)
+db = client['KJXWebsite']  # Use your actual database name
+collection = db['Users data']  # Use your actual collection name
+
+def save_user_data(data):
+    try:
+        result = collection.insert_one(data)
+        print("User data saved successfully to MongoDB")
+        return str(result.inserted_id)  # Return the ObjectId as a string
+    except Exception as e:
+        print(f"Error saving user data to MongoDB: {e}")
+        return None
 
 def is_valid_email(email):
     email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -13,40 +30,12 @@ def is_valid_phone(phone):
     phone_regex = r'^\+?1?\d{9,15}$'
     return re.match(phone_regex, phone) is not None
 
-def send_email(data):
-    sender_email = "devamkathane.me@sbjit.edu.in"
-    password = "nooneisyours42"
-    receiver_email = sender_email  # Sending to self
-
-    message = MIMEMultipart()
-    message["From"] = sender_email
-    message["To"] = receiver_email
-    message["Subject"] = "New User Data from Chatbot"
-
-    body = f"""
-    New user data received:
-    
-    Name: {data.get('name', 'N/A')}
-    Email: {data.get('email', 'N/A')}
-    Phone: {data.get('phone', 'N/A')}
-    Problem Statement: {data.get('problem_statement', 'N/A')}
-    """
-
-    message.attach(MIMEText(body, "plain"))
-
-    try:
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls()
-            server.login(sender_email, password)
-            server.send_message(message)
-        print("Email sent successfully")
-    except Exception as e:
-        print(f"Error sending email: {e}")
-
 def get_chat_response():
     try:
         user_message = request.json.get("message", "").lower()
         current_tag = request.json.get("current_tag", "start_conversation")
+        user_data = request.json.get("user_data", {})  # Fetch user_data from request if it exists
+
         response = []
         options = []
         response_tag = None
@@ -190,7 +179,7 @@ def get_chat_response():
                             {"text": "No", "value": "no"}
                         ]
                         response_tag = f"{category}_{subcategory}_services"
-                        return jsonify({"response": response, "tag": response_tag, "options": options})
+                        return jsonify({"response": response, "tag": response_tag, "options": options, "user_data": user_data})
             
             response = ["I'm sorry, I didn't understand that. Could you please choose from the options provided?"]
             response_tag = "select_service_category"
@@ -226,7 +215,7 @@ def get_chat_response():
         elif current_tag == "collect_email":
             email = request.json.get("message", "")
             if is_valid_email(email):
-                send_email({"email": email})
+                user_data['email'] = email  # Store email in user_data
                 response = ["Thank you. Now, please provide your phone number."]
                 response_tag = "collect_phone"
             else:
@@ -237,7 +226,7 @@ def get_chat_response():
         elif current_tag == "collect_phone":
             phone = request.json.get("message", "")
             if is_valid_phone(phone):
-                send_email({"phone": phone})
+                user_data['phone'] = phone  # Store phone in user_data
                 response = ["Great. Could you please tell me your name?"]
                 response_tag = "collect_name"
             else:
@@ -247,15 +236,19 @@ def get_chat_response():
 
         elif current_tag == "collect_name":
             name = request.json.get("message", "")
-            send_email({"name": name})
+            user_data['name'] = name  # Store name in user_data
             response = ["Thank you, " + name + ". Can you describe what help you want from us? Please provide your problem statement."]
             response_tag = "collect_problem_statement"
             options = []
 
         elif current_tag == "collect_problem_statement":
             problem_statement = request.json.get("message", "")
-            send_email({"problem_statement": problem_statement})
-            response = ["Thank you for providing your details. Our team will reach out to you shortly."]
+            user_data['problem_statement'] = problem_statement  # Store problem statement in user_data
+            result_id = save_user_data(user_data)  # Save all user data to MongoDB
+            if result_id:
+                response = [f"Thank you for providing your details. Our team will reach out to you shortly. Your reference ID is {result_id}."]
+            else:
+                response = ["There was an issue saving your data, please try again later."]
             response_tag = "end_conversation"
             options = []
 
@@ -271,9 +264,8 @@ def get_chat_response():
         if not response_tag:
             response_tag = "unknown_tag"
 
-        return jsonify({"response": response, "tag": response_tag, "options": options})
+        # Return response along with user_data to maintain state
+        return jsonify({"response": response, "tag": response_tag, "options": options, "user_data": user_data})
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {e}"}), 500
-
-# The rest of your code (if any) goes here
