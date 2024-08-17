@@ -1,7 +1,6 @@
 let currentTag = "start_conversation";
 let userData = {};
 let typingTimeout;
-let isMicrophoneOn = false;
 let isSpeakerOn = true;
 let recognition;
 let utterance;
@@ -116,17 +115,6 @@ function processUserInput(userInput, isManual) {
         } else {
             userData = data.user_data || {};
             console.log("Updated userData:", userData);
-            if (data.tag === 'collect_name' || data.tag === 'collect_email' || data.tag === 'collect_phone' || data.tag === 'collect_problem_statement') {
-                document.getElementById('mic-button').style.display = 'inline-block';
-                isMicrophoneOn = true;
-                toggleMicrophone(true);
-                startListening();
-            } else {
-                document.getElementById('mic-button').style.display = 'none';
-                isMicrophoneOn = false;
-                toggleMicrophone(false);
-                stopListening();
-            }
             displayMessages(data.response, 0, data.options, data.tag);
         }
     })
@@ -161,6 +149,16 @@ function displayMessages(messages, index, options, newTag) {
             // If there are no options, show the input field
             document.getElementById('user-input').style.display = 'inline-block';
             document.querySelector('.send-button').style.display = 'flex';
+        }
+
+        // Show/hide microphone button based on the current tag
+        const micButton = document.getElementById('mic-button');
+        const micTags = ['collect_name', 'collect_email', 'collect_phone', 'collect_problem_statement'];
+        if (micTags.includes(newTag)) {
+            micButton.style.display = 'inline-block';
+        } else {
+            micButton.style.display = 'none';
+            stopListening();
         }
 
         // Handle "Close Chat" option and automatic close
@@ -220,14 +218,51 @@ function resetChat() {
     stopListening();  // Ensure the microphone is stopped when resetting the chat
 }
 
-function toggleMicrophone(isActive) {
-    const micButton = document.getElementById('mic-button');
-    micButton.classList.toggle('active', isActive);
-    micButton.classList.toggle('inactive', !isActive);
-    if (isActive) {
+function toggleMicrophone() {
+    if (!recognition) {
         startListening();
     } else {
         stopListening();
+    }
+}
+
+function startListening() {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = function() {
+        console.log('Speech recognition started');
+        document.getElementById('mic-button').classList.add('active');
+        document.getElementById('mic-button').classList.remove('inactive');
+    };
+
+    recognition.onresult = function(event) {
+        const userInput = event.results[0][0].transcript;
+        console.log('Recognized speech:', userInput);
+        addMessage(userInput, 'user-message');
+        processUserInput(userInput, true);
+    };
+
+    recognition.onend = function() {
+        console.log('Speech recognition ended');
+        document.getElementById('mic-button').classList.remove('active');
+        document.getElementById('mic-button').classList.add('inactive');
+        recognition = null;
+    };
+
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        stopListening();
+    };
+
+    recognition.start();
+}
+
+function stopListening() {
+    if (recognition) {
+        recognition.stop();
+        recognition = null;
     }
 }
 
@@ -241,43 +276,7 @@ function toggleSpeaker() {
     }
 }
 
-function startListening() {
-    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    recognition.onresult = function(event) {
-        const userInput = event.results[0][0].transcript;
-        document.getElementById('user-input').value = userInput;
-        sendMessage();  // Automatically send the message
-    };
-
-    recognition.onend = function() {
-        if (isMicrophoneOn) {
-            startListening();  // Restart listening if microphone is still active
-        }
-    };
-
-    recognition.onerror = function(event) {
-        console.error("Speech recognition error detected: " + event.error);
-        stopListening();  // Stop on error
-    };
-
-    recognition.start();
-}
-
-function stopListening() {
-    if (recognition) {
-        recognition.stop();
-        recognition = null;  // Clear recognition instance
-    }
-    isMicrophoneOn = false;
-    const micButton = document.getElementById('mic-button');
-    micButton.classList.remove('active');
-    micButton.classList.add('inactive');
-}
-
-// Initialize the chat
+// Automatically open chatbot after 5 seconds
 document.addEventListener('DOMContentLoaded', function() {
-    showChatAfterDelay(); // Show the chat after 5 seconds
+    setTimeout(toggleChatbox, 5000); // Open the chatbot after 5 seconds
 });

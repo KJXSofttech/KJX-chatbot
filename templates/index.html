@@ -11,7 +11,7 @@
     <div class="chat-icon" id="chat-icon" onclick="toggleChatbox()">💬</div>
     <div class="phone-container" id="phone-container" style="display: none;">
         <div class="phone-header">
-            <img src="{{ url_for('static', filename='a.png') }}" alt="Bot Avatar" class="bot-avatar">
+            <img src="{{ url_for('static', filename='Chatbot.png') }}" alt="Bot Avatar" class="bot-avatar">
             <span class="header-title">KJX Softtech</span>
             <span class="header-icons">
                 <span class="reset-icon" onclick="resetChat()">🔄</span> 
@@ -22,8 +22,8 @@
             <div class="chat-box" id="chat-box"></div>
             <div class="input-container">
                 <!-- Mic and speaker buttons -->
-                <button class="mic-button" id="mic-button" onclick="toggleMicrophone()">🎤</button>
-                <button class="speaker-button" id="speaker-button" onclick="toggleSpeaker()">🔊</button>
+                <button class="mic-button inactive" id="mic-button" onclick="toggleMicrophone()">🎤</button>
+                <button class="speaker-button active" id="speaker-button" onclick="toggleSpeaker()">🔊</button>
                 <input type="text" id="user-input" placeholder="Type your message here..." class="input-box">
                 <button class="send-button" onclick="sendMessage()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
