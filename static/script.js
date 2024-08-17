@@ -90,7 +90,7 @@ function processUserInput(userInput, isManual) {
         is_manual: isManual
     };
 
-    console.log("Sending payload:", payload);  // Debug log
+    console.log("Sending payload:", payload);
 
     fetch("/get_response", {
         method: "POST",
@@ -99,19 +99,24 @@ function processUserInput(userInput, isManual) {
         },
         body: JSON.stringify(payload)
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
-        console.log("Received data:", data);  // Debug log
+        console.log("Received data:", data);
         if (data.error) {
             addMessage(data.error, 'bot-message');
         } else {
-            // Update userData with the received user_data
             userData = data.user_data || {};
-            console.log("Updated userData:", userData);  // Debug log
+            console.log("Updated userData:", userData);
             displayMessages(data.response, 0, data.options, data.tag);
         }
     })
     .catch(error => {
+        console.error("Error processing user input:", error);
         addMessage(`An error occurred: ${error.message}`, 'bot-message');
     });
 }
@@ -172,16 +177,17 @@ function startConversation() {
     })
     .then(response => response.json())
     .then(data => {
-        console.log("Start conversation data:", data);  // Debug log
+        console.log("Start conversation data:", data);
         if (data.error) {
             addMessage(data.error, 'bot-message');
         } else {
             userData = data.user_data || {};
-            console.log("Initial userData:", userData);  // Debug log
+            console.log("Initial userData:", userData);
             displayMessages(data.response, 0, data.options, data.tag);
         }
     })
     .catch(error => {
+        console.error("Error starting conversation:", error);
         addMessage(`An error occurred: ${error.message}`, 'bot-message');
     });
 }

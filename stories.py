@@ -4,25 +4,39 @@ from flask import request
 import certifi
 from pymongo import MongoClient
 import urllib.parse
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
 # MongoDB connection setup
 username = urllib.parse.quote_plus("kjxsofttechpvtltd")
 password = urllib.parse.quote_plus("KJXSOFTTECH123")
-connection_string = f"mongodb+srv://{username}:{password}@kjxwebsite.3mup0.mongodb.net/?retryWrites=true&w=majority&appName=kjxwebsite&tls=true&tlsAllowInvalidCertificates=true"
+connection_string = (
+    f"mongodb+srv://{username}:{password}@kjxwebsite.3mup0.mongodb.net/?retryWrites=true&w=majority&appName=kjxwebsite&tls=true&tlsAllowInvalidCertificates=true"
+)
 
-client = MongoClient(connection_string, tlsCAFile=certifi.where())
-db = client['KJXWebsite']  # Use your actual database name
-collection = db['Users data']  # Use your actual collection name
+try:
+    client = MongoClient(connection_string, tlsCAFile=certifi.where())
+    db = client['KJXWebsite']  # Use your actual database name
+    collection = db['Users data']  # Use your actual collection name
+except Exception as e:
+    logging.error(f"Error connecting to MongoDB: {e}")
+    client = None
 
 def save_user_data(data):
+    if not client:
+        logging.error("MongoDB client is not initialized.")
+        return None
+
     try:
         result = collection.insert_one(data)
-        print("User data saved successfully to MongoDB")
+        logging.info("User data saved successfully to MongoDB")
         return str(result.inserted_id)  # Convert ObjectId to string
     except Exception as e:
-        print(f"Error saving user data to MongoDB: {e}")
+        logging.error(f"Error saving user data to MongoDB: {e}")
         return None
-    
+
 def is_valid_email(email):
     email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(email_regex, email) is not None
@@ -37,7 +51,7 @@ def get_chat_response():
         current_tag = request.json.get("current_tag", "start_conversation")
         user_data = request.json.get("user_data", {})  # Fetch user_data from request if it exists
 
-        print(f"Received user_data: {user_data}")  # Debug log
+        logging.info(f"Received user_data: {user_data}")
 
         response = []
         options = []
@@ -149,9 +163,9 @@ def get_chat_response():
             elif user_message == "know_why":
                 response = [
                     "Here's why KJX Softtech stands out:",
-                    "- **Fast Service:** We are committed to completing projects as quickly and accurately as possible.",
-                    "- **Pocket-friendly:** We offer the greatest service at a reasonable price.",
-                    "- **Global Enterprise Development:** Our focus is on advancing your business on a worldwide scale.",
+                    "Fast Service: We are committed to completing projects as quickly and accurately as possible.",
+                    "Pocket-friendly: We offer the greatest service at a reasonable price.",
+                    "Global Enterprise Development: Our focus is on advancing your business on a worldwide scale.",
                     "Would you like to contact us for more details?"
                 ]
                 options = [
@@ -224,7 +238,7 @@ def get_chat_response():
             email = request.json.get("message", "")
             if is_valid_email(email):
                 user_data['email'] = email
-                print(f"Email added: {user_data}")  # Debug log
+                logging.info(f"Email added: {user_data}")
                 response = ["Thank you. Now, please provide your phone number."]
                 response_tag = "collect_phone"
             else:
@@ -236,7 +250,7 @@ def get_chat_response():
             phone = request.json.get("message", "")
             if is_valid_phone(phone):
                 user_data['phone'] = phone
-                print(f"Phone added: {user_data}")  # Debug log
+                logging.info(f"Phone added: {user_data}")
                 response = ["Great. Could you please tell me your name?"]
                 response_tag = "collect_name"
             else:
@@ -247,7 +261,7 @@ def get_chat_response():
         elif current_tag == "collect_name":
             name = request.json.get("message", "")
             user_data['name'] = name
-            print(f"Name added: {user_data}")  # Debug log
+            logging.info(f"Name added: {user_data}")
             response = ["Thank you, " + name + ". Can you describe what help you want from us? Please provide your problem statement."]
             response_tag = "collect_problem_statement"
             options = []
@@ -255,7 +269,7 @@ def get_chat_response():
         elif current_tag == "collect_problem_statement":
             problem_statement = request.json.get("message", "")
             user_data['problem_statement'] = problem_statement
-            print(f"Problem statement added: {user_data}")  # Debug log
+            logging.info(f"Problem statement added: {user_data}")
             
             # Check only for missing fields
             required_fields = ['name', 'email', 'phone', 'problem_statement']
@@ -278,7 +292,7 @@ def get_chat_response():
         if not response_tag:
             response_tag = "unknown_tag"
 
-        print(f"Sending user_data: {user_data}")  # Debug log
+        logging.info(f"Sending user_data: {user_data}")
         return {
             "response": response,
             "tag": response_tag,
@@ -287,5 +301,5 @@ def get_chat_response():
         }
 
     except Exception as e:
-        print(f"Error in get_chat_response: {e}")  # Debug log
+        logging.error(f"Error in get_chat_response: {e}")
         return {"error": f"An error occurred: {str(e)}"}
