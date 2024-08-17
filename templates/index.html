@@ -21,6 +21,9 @@
         <div class="chat-container" id="chat-container">
             <div class="chat-box" id="chat-box"></div>
             <div class="input-container">
+                <!-- Mic and speaker buttons -->
+                <button class="mic-button" id="mic-button" onclick="toggleMicrophone()">🎤</button>
+                <button class="speaker-button" id="speaker-button" onclick="toggleSpeaker()">🔊</button>
                 <input type="text" id="user-input" placeholder="Type your message here..." class="input-box">
                 <button class="send-button" onclick="sendMessage()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -1,6 +1,10 @@
 let currentTag = "start_conversation";
 let userData = {};
 let typingTimeout;
+let isMicrophoneOn = false;
+let isSpeakerOn = true;
+let recognition;
+let utterance;
 
 function addMessage(message, className, callback = null) {
     const chatBox = document.getElementById('chat-box');
@@ -112,6 +116,17 @@ function processUserInput(userInput, isManual) {
         } else {
             userData = data.user_data || {};
             console.log("Updated userData:", userData);
+            if (data.tag === 'collect_name' || data.tag === 'collect_email' || data.tag === 'collect_phone' || data.tag === 'collect_problem_statement') {
+                document.getElementById('mic-button').style.display = 'inline-block';
+                isMicrophoneOn = true;
+                toggleMicrophone(true);
+                startListening();
+            } else {
+                document.getElementById('mic-button').style.display = 'none';
+                isMicrophoneOn = false;
+                toggleMicrophone(false);
+                stopListening();
+            }
             displayMessages(data.response, 0, data.options, data.tag);
         }
     })
@@ -123,6 +138,10 @@ function processUserInput(userInput, isManual) {
 
 function displayMessages(messages, index, options, newTag) {
     if (index < messages.length) {
+        if (isSpeakerOn) {
+            utterance = new SpeechSynthesisUtterance(messages[index]);
+            window.speechSynthesis.speak(utterance);
+        }
         addMessage(messages[index], 'bot-message', () => displayMessages(messages, index + 1, options, newTag));
     } else {
         currentTag = newTag;
@@ -198,25 +217,64 @@ function resetChat() {
     currentTag = "start_conversation";
     userData = {};
     clearTimeout(typingTimeout); // Clear any existing typing timeout
+    stopListening();  // Ensure the microphone is stopped when resetting the chat
 }
 
-function handleCrossClick() {
-    const phoneContainer = document.getElementById('phone-container');
-    const chatIcon = document.getElementById('chat-icon');
-    phoneContainer.style.display = "none";
-    chatIcon.style.display = "block";
-    resetChat(); // Reset the chat when closing
+function toggleMicrophone(isActive) {
+    const micButton = document.getElementById('mic-button');
+    micButton.classList.toggle('active', isActive);
+    micButton.classList.toggle('inactive', !isActive);
+    if (isActive) {
+        startListening();
+    } else {
+        stopListening();
+    }
 }
 
-function handleResetClick() {
-    resetChat(); // Reset the chat
-    startConversation(); // Start a new conversation
+function toggleSpeaker() {
+    isSpeakerOn = !isSpeakerOn;
+    const speakerButton = document.getElementById('speaker-button');
+    speakerButton.classList.toggle('active', isSpeakerOn);
+    speakerButton.classList.toggle('inactive', !isSpeakerOn);
+    if (!isSpeakerOn && utterance) {
+        window.speechSynthesis.cancel(); // Stop any ongoing speech
+    }
 }
 
-function showChatAfterDelay() {
-    setTimeout(() => {
-        toggleChatbox();
-    }, 5000); // 5000 milliseconds = 5 seconds
+function startListening() {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = function(event) {
+        const userInput = event.results[0][0].transcript;
+        document.getElementById('user-input').value = userInput;
+        sendMessage();  // Automatically send the message
+    };
+
+    recognition.onend = function() {
+        if (isMicrophoneOn) {
+            startListening();  // Restart listening if microphone is still active
+        }
+    };
+
+    recognition.onerror = function(event) {
+        console.error("Speech recognition error detected: " + event.error);
+        stopListening();  // Stop on error
+    };
+
+    recognition.start();
+}
+
+function stopListening() {
+    if (recognition) {
+        recognition.stop();
+        recognition = null;  // Clear recognition instance
+    }
+    isMicrophoneOn = false;
+    const micButton = document.getElementById('mic-button');
+    micButton.classList.remove('active');
+    micButton.classList.add('inactive');
 }
 
 // Initialize the chat
