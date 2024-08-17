@@ -8,7 +8,7 @@ connection_string = f"mongodb+srv://{username}:{password}@kjxwebsite.3mup0.mongo
 
 try:
     # Establish a connection to the MongoDB cluster
-    client = MongoClient(connection_string)
+    client = MongoClient(connection_string, tls=True)
     
     # Access the database
     db = client['KJXWebsite']  # Your database name is KJXWebsite
@@ -18,7 +18,7 @@ try:
     
     # Sample document to insert
     sample_document = {
-        "name": "John Doe",
+        "name": "John Dose",
         "email": "johndoe@example.com",
         "phone": "+1234567890",
         "problem_statement": "Sample problem statement for testing."

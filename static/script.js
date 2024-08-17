@@ -86,11 +86,11 @@ function processUserInput(userInput, isManual) {
     const payload = {
         message: userInput,
         current_tag: currentTag,
-        phone_number: userData.phone_number,
-        name: userData.name,
-        email: userData.email,
+        user_data: userData,
         is_manual: isManual
     };
+
+    console.log("Sending payload:", payload);  // Debug log
 
     fetch("/get_response", {
         method: "POST",
@@ -101,9 +101,13 @@ function processUserInput(userInput, isManual) {
     })
     .then(response => response.json())
     .then(data => {
+        console.log("Received data:", data);  // Debug log
         if (data.error) {
             addMessage(data.error, 'bot-message');
         } else {
+            // Update userData with the received user_data
+            userData = data.user_data || {};
+            console.log("Updated userData:", userData);  // Debug log
             displayMessages(data.response, 0, data.options, data.tag);
         }
     })
@@ -164,13 +168,16 @@ function startConversation() {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ message: "", current_tag: "start_conversation" })
+        body: JSON.stringify({ message: "", current_tag: "start_conversation", user_data: {} })
     })
     .then(response => response.json())
     .then(data => {
+        console.log("Start conversation data:", data);  // Debug log
         if (data.error) {
             addMessage(data.error, 'bot-message');
         } else {
+            userData = data.user_data || {};
+            console.log("Initial userData:", userData);  // Debug log
             displayMessages(data.response, 0, data.options, data.tag);
         }
     })

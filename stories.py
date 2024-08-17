@@ -1,15 +1,16 @@
 import json
 import re
-from flask import jsonify, request
+from flask import request
+import certifi
 from pymongo import MongoClient
 import urllib.parse
 
 # MongoDB connection setup
 username = urllib.parse.quote_plus("kjxsofttechpvtltd")
 password = urllib.parse.quote_plus("KJXSOFTTECH123")
-connection_string = f"mongodb+srv://{username}:{password}@kjxwebsite.3mup0.mongodb.net/?retryWrites=true&w=majority&appName=kjxwebsite"
+connection_string = f"mongodb+srv://{username}:{password}@kjxwebsite.3mup0.mongodb.net/?retryWrites=true&w=majority&appName=kjxwebsite&tls=true&tlsAllowInvalidCertificates=true"
 
-client = MongoClient(connection_string)
+client = MongoClient(connection_string, tlsCAFile=certifi.where())
 db = client['KJXWebsite']  # Use your actual database name
 collection = db['Users data']  # Use your actual collection name
 
@@ -17,11 +18,11 @@ def save_user_data(data):
     try:
         result = collection.insert_one(data)
         print("User data saved successfully to MongoDB")
-        return str(result.inserted_id)  # Return the ObjectId as a string
+        return str(result.inserted_id)  # Convert ObjectId to string
     except Exception as e:
         print(f"Error saving user data to MongoDB: {e}")
         return None
-
+    
 def is_valid_email(email):
     email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(email_regex, email) is not None
@@ -35,6 +36,8 @@ def get_chat_response():
         user_message = request.json.get("message", "").lower()
         current_tag = request.json.get("current_tag", "start_conversation")
         user_data = request.json.get("user_data", {})  # Fetch user_data from request if it exists
+
+        print(f"Received user_data: {user_data}")  # Debug log
 
         response = []
         options = []
@@ -179,7 +182,12 @@ def get_chat_response():
                             {"text": "No", "value": "no"}
                         ]
                         response_tag = f"{category}_{subcategory}_services"
-                        return jsonify({"response": response, "tag": response_tag, "options": options, "user_data": user_data})
+                        return {
+                            "response": response,
+                            "tag": response_tag,
+                            "options": options,
+                            "user_data": user_data
+                        }
             
             response = ["I'm sorry, I didn't understand that. Could you please choose from the options provided?"]
             response_tag = "select_service_category"
@@ -215,7 +223,8 @@ def get_chat_response():
         elif current_tag == "collect_email":
             email = request.json.get("message", "")
             if is_valid_email(email):
-                user_data['email'] = email  # Store email in user_data
+                user_data['email'] = email
+                print(f"Email added: {user_data}")  # Debug log
                 response = ["Thank you. Now, please provide your phone number."]
                 response_tag = "collect_phone"
             else:
@@ -226,7 +235,8 @@ def get_chat_response():
         elif current_tag == "collect_phone":
             phone = request.json.get("message", "")
             if is_valid_phone(phone):
-                user_data['phone'] = phone  # Store phone in user_data
+                user_data['phone'] = phone
+                print(f"Phone added: {user_data}")  # Debug log
                 response = ["Great. Could you please tell me your name?"]
                 response_tag = "collect_name"
             else:
@@ -236,36 +246,46 @@ def get_chat_response():
 
         elif current_tag == "collect_name":
             name = request.json.get("message", "")
-            user_data['name'] = name  # Store name in user_data
+            user_data['name'] = name
+            print(f"Name added: {user_data}")  # Debug log
             response = ["Thank you, " + name + ". Can you describe what help you want from us? Please provide your problem statement."]
             response_tag = "collect_problem_statement"
             options = []
 
         elif current_tag == "collect_problem_statement":
             problem_statement = request.json.get("message", "")
-            user_data['problem_statement'] = problem_statement  # Store problem statement in user_data
-            result_id = save_user_data(user_data)  # Save all user data to MongoDB
-            if result_id:
-                response = [f"Thank you for providing your details. Our team will reach out to you shortly. Your reference ID is {result_id}."]
+            user_data['problem_statement'] = problem_statement
+            print(f"Problem statement added: {user_data}")  # Debug log
+            
+            # Check only for missing fields
+            required_fields = ['name', 'email', 'phone', 'problem_statement']
+            missing_fields = [field for field in required_fields if field not in user_data]
+            
+            if missing_fields:
+                response = [f"Some information is missing. Please provide: {', '.join(missing_fields)}"]
+                response_tag = f"collect_{'_'.join(missing_fields)}"
             else:
-                response = ["There was an issue saving your data, please try again later."]
-            response_tag = "end_conversation"
+                result_id = save_user_data(user_data)  # Save all user data to MongoDB
+                if result_id:
+                    response = [f"Thank you for providing your details. Our team will reach out to you shortly. Your reference ID is {result_id}."]
+                else:
+                    response = ["There was an issue saving your data, please try again later."]
+                response_tag = "end_conversation"
+            
             options = []
-
-        elif current_tag == "end_conversation":
-            response = ["Is there anything else I can help you with?"]
-            options = [
-                {"text": "Yes", "value": "start_conversation"},
-                {"text": "No", "value": "close_chat"}
-            ]
-            response_tag = "offer_more_help"
 
         # Ensure response_tag is set for all pathways
         if not response_tag:
             response_tag = "unknown_tag"
 
-        # Return response along with user_data to maintain state
-        return jsonify({"response": response, "tag": response_tag, "options": options, "user_data": user_data})
+        print(f"Sending user_data: {user_data}")  # Debug log
+        return {
+            "response": response,
+            "tag": response_tag,
+            "options": options,
+            "user_data": user_data
+        }
 
     except Exception as e:
-        return jsonify({"error": f"An error occurred: {e}"}), 500
+        print(f"Error in get_chat_response: {e}")  # Debug log
+        return {"error": f"An error occurred: {str(e)}"}
