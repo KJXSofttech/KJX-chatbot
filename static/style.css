@@ -161,7 +161,7 @@ body {
 }
 
 .emoji {
-    font-size: 20px;
+    font-size: 16px; /* Smaller size for emojis */
     margin: 0 8px;
 }
 
@@ -196,6 +196,45 @@ body {
     border-top: 1px solid #D5DBDB; /* Light gray border */
     border-bottom-left-radius: 15px;
     border-bottom-right-radius: 15px;
+    box-sizing: border-box;
+}
+
+.mic-button, .speaker-button {
+    background-color: #f0f0f0;
+    border: none;
+    padding: 6px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px; /* Smaller size for icons */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 24px; /* Ensuring the button is circular */
+    height: 24px; /* Ensuring the button is circular */
+}
+
+.mic-button:hover, .speaker-button:hover {
+    background-color: #dcdcdc;
+}
+
+.mic-button.active {
+    background-color: green; /* Green when active */
+    color: white;
+}
+
+.mic-button.inactive {
+    background-color: red; /* Red when inactive */
+    color: white;
+}
+
+.speaker-button.active {
+    background-color: green; /* Green when active */
+    color: white;
+}
+
+.speaker-button.inactive {
+    background-color: red; /* Red when inactive */
+    color: white;
 }
 
 .input-box {
@@ -203,9 +242,10 @@ body {
     padding: 8px;
     border: 1px solid #D5DBDB; /* Light gray border */
     border-radius: 15px;
-    margin-right: 8px;
+    margin-right: 4px; /* Reduced margin to decrease gap */
     font-size: 14px;
     transition: border-color 0.3s;
+    box-sizing: border-box;
 }
 
 .input-box:focus {
@@ -216,7 +256,7 @@ body {
 .send-button {
     background-color: #1E2A38; /* Dark blue-gray background */
     color: white;
-    padding: 8px;
+    padding: 6px; /* Reduced padding for smaller button */
     border: none;
     border-radius: 50%;
     cursor: pointer;
@@ -224,6 +264,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 32px; /* Reduced width */
+    height: 32px; /* Reduced height */
 }
 
 .send-button:hover {
@@ -236,7 +278,35 @@ body {
     height: 16px;
 }
 
-.reset-icon, .close-icon {
-    cursor: pointer;
-    font-size: 16px;
+/* Adjusting the layout */
+.input-container {
+    display: flex;
+    align-items: center;
+    gap: 4px; /* Reduced gap between elements */
+}
+
+.icon-container {
+    display: flex;
+    flex-direction: column; /* Stack vertically */
+    gap: 4px; /* Space between mic and speaker */
+}
+
+.mic-button, .speaker-button {
+    order: 1; /* Move the buttons to the beginning of the container */
+}
+
+.input-box {
+    order: 2;
+    flex-grow: 1; /* Allow the input box to take up available space */
+}
+
+.send-button {
+    order: 3;
+}
+.active {
+    color: #007bff;
+}
+
+.inactive {
+    color: #6c757d;
 }

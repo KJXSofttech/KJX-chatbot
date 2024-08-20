@@ -1,6 +1,9 @@
 let currentTag = "start_conversation";
 let userData = {};
 let typingTimeout;
+let isSpeakerOn = true;
+let recognition;
+let utterance;
 
 function addMessage(message, className, callback = null) {
     const chatBox = document.getElementById('chat-box');
@@ -123,6 +126,10 @@ function processUserInput(userInput, isManual) {
 
 function displayMessages(messages, index, options, newTag) {
     if (index < messages.length) {
+        if (isSpeakerOn) {
+            utterance = new SpeechSynthesisUtterance(messages[index]);
+            window.speechSynthesis.speak(utterance);
+        }
         addMessage(messages[index], 'bot-message', () => displayMessages(messages, index + 1, options, newTag));
     } else {
         currentTag = newTag;
@@ -142,6 +149,16 @@ function displayMessages(messages, index, options, newTag) {
             // If there are no options, show the input field
             document.getElementById('user-input').style.display = 'inline-block';
             document.querySelector('.send-button').style.display = 'flex';
+        }
+
+        // Show/hide microphone button based on the current tag
+        const micButton = document.getElementById('mic-button');
+        const micTags = ['collect_name', 'collect_email', 'collect_phone', 'collect_problem_statement'];
+        if (micTags.includes(newTag)) {
+            micButton.style.display = 'inline-block';
+        } else {
+            micButton.style.display = 'none';
+            stopListening();
         }
 
         // Handle "Close Chat" option and automatic close
@@ -198,28 +215,68 @@ function resetChat() {
     currentTag = "start_conversation";
     userData = {};
     clearTimeout(typingTimeout); // Clear any existing typing timeout
+    stopListening();  // Ensure the microphone is stopped when resetting the chat
 }
 
-function handleCrossClick() {
-    const phoneContainer = document.getElementById('phone-container');
-    const chatIcon = document.getElementById('chat-icon');
-    phoneContainer.style.display = "none";
-    chatIcon.style.display = "block";
-    resetChat(); // Reset the chat when closing
+function toggleMicrophone() {
+    if (!recognition) {
+        startListening();
+    } else {
+        stopListening();
+    }
 }
 
-function handleResetClick() {
-    resetChat(); // Reset the chat
-    startConversation(); // Start a new conversation
+function startListening() {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = function() {
+        console.log('Speech recognition started');
+        document.getElementById('mic-button').classList.add('active');
+        document.getElementById('mic-button').classList.remove('inactive');
+    };
+
+    recognition.onresult = function(event) {
+        const userInput = event.results[0][0].transcript;
+        console.log('Recognized speech:', userInput);
+        addMessage(userInput, 'user-message');
+        processUserInput(userInput, true);
+    };
+
+    recognition.onend = function() {
+        console.log('Speech recognition ended');
+        document.getElementById('mic-button').classList.remove('active');
+        document.getElementById('mic-button').classList.add('inactive');
+        recognition = null;
+    };
+
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        stopListening();
+    };
+
+    recognition.start();
 }
 
-function showChatAfterDelay() {
-    setTimeout(() => {
-        toggleChatbox();
-    }, 5000); // 5000 milliseconds = 5 seconds
+function stopListening() {
+    if (recognition) {
+        recognition.stop();
+        recognition = null;
+    }
 }
 
-// Initialize the chat
+function toggleSpeaker() {
+    isSpeakerOn = !isSpeakerOn;
+    const speakerButton = document.getElementById('speaker-button');
+    speakerButton.classList.toggle('active', isSpeakerOn);
+    speakerButton.classList.toggle('inactive', !isSpeakerOn);
+    if (!isSpeakerOn && utterance) {
+        window.speechSynthesis.cancel(); // Stop any ongoing speech
+    }
+}
+
+// Automatically open chatbot after 5 seconds
 document.addEventListener('DOMContentLoaded', function() {
-    showChatAfterDelay(); // Show the chat after 5 seconds
+    setTimeout(toggleChatbox, 5000); // Open the chatbot after 5 seconds
 });
